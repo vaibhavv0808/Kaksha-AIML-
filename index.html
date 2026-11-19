@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kaksha • Attendance</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,transparent 1px);background-size:18px 18px;color:#292524;font-family:Poppins,system-ui,sans-serif}
+.mono{font-variant-numeric:tabular-nums}
+.hd{font-family:Lora,Georgia,serif}
+.sb{transition:all .12s}.sb:active{transform:scale(.93)}
+.row{user-select:none;-webkit-tap-highlight-color:transparent}
+</style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+<div id="toast" class="fixed bottom-20 right-4 z-50 translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-3.5 py-2.5 rounded-2xl shadow-lg bg-stone-900 text-white text-xs font-medium"><span id="toastMsg"></span></div>
+
+<header class="sticky top-0 z-30 bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-800 shadow-md">
+<div class="max-w-4xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2 flex-wrap">
+<div><h1 class="hd text-lg sm:text-xl font-bold leading-tight text-white tracking-tight">🎓 Kaksha</h1>
+<p class="text-[11px] text-indigo-200">Attendance • SISTec CSE-AIML • <span id="cnt">71</span> students</p></div>
+<div id="hdrBtns" class="flex gap-1.5 flex-wrap"></div>
+</div></header>
+
+<div id="cfgWarn" class="hidden bg-rose-100 text-rose-800 text-xs font-semibold px-3 py-2 text-center">⚠️ Firebase config abhi nahi bhari hai (index.html ke upar firebaseConfig dekhein). Abhi sirf demo mode hai.</div>
+
+<main class="flex-1 max-w-4xl w-full mx-auto px-2.5 py-3 space-y-3">
+<section class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-3">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+<div class="sm:col-span-2"><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Subject / Lecture</label>
+<select id="lec" class="w-full px-3 py-2 rounded-lg bg-stone-50 border border-stone-300 text-sm font-medium outline-none focus:border-indigo-600"></select></div>
+<div><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Date</label>
+<input type="date" id="dt" class="w-full px-3 py-2 rounded-lg bg-stone-50 border border-stone-300 text-sm font-medium outline-none focus:border-indigo-600"></div>
+</div>
+<div class="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between gap-2">
+<div class="inline-flex p-1 rounded-lg bg-stone-100 border border-stone-200 w-full sm:w-auto" id="tabs"></div>
+<div id="bulk" class="hidden gap-1.5 w-full sm:w-auto justify-end">
+<button onclick="markAll('P')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">All P</button>
+<button onclick="markAll('A')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">All A</button>
+</div></div>
+<div id="status" class="text-[11px] font-semibold"></div>
+</section>
+
+<section class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+<div class="sm:col-span-7 grid grid-cols-4 gap-1.5">
+<div class="bg-indigo-50 rounded-lg border border-indigo-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-stone-400 block">Total</span><span id="sT" class="text-lg font-bold text-indigo-800 mono">71</span></div>
+<div class="bg-emerald-50 rounded-lg border border-emerald-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-emerald-600 block">Present</span><span id="sP" class="text-lg font-bold text-emerald-600 mono">71</span></div>
+<div class="bg-rose-50 rounded-lg border border-rose-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-rose-600 block">Absent</span><span id="sA" class="text-lg font-bold text-rose-600 mono">0</span></div>
+<div class="bg-amber-50 rounded-lg border border-amber-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-amber-600 block">POD</span><span id="sD" class="text-lg font-bold text-amber-600 mono">0</span></div>
+</div>
+<input id="q" placeholder="🔍 Apna naam ya roll no. dhoondhein" class="sm:col-span-5 w-full px-3 py-2 rounded-lg bg-white border border-stone-200 text-sm outline-none focus:border-indigo-600">
+</section>
+
+<section class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
+<div class="px-3 py-2 bg-stone-50 border-b border-stone-200 flex items-center justify-between gap-2">
+<span id="badge" class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-100 text-indigo-800"></span>
+<div class="flex gap-1 text-[11px] font-bold" id="filters"></div>
+</div>
+<div id="list" class="divide-y divide-stone-100"></div>
+</section>
+</main>
+
+<div class="sticky bottom-0 z-30 bg-white/95 backdrop-blur border-t border-indigo-100 shadow-[0_-4px_12px_rgba(49,46,129,0.08)] px-3 py-2 flex items-center justify-between sm:hidden">
+<div><span id="mLab" class="text-[11px] font-bold block"></span><span id="mSt" class="text-[11px] text-stone-500"></span></div>
+<div id="botBtns" class="flex gap-1.5"></div>
+</div>
+
+<div id="modal" class="fixed inset-0 z-50 hidden bg-stone-900/60 items-center justify-center p-2.5">
+<div class="bg-white rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+<div class="px-4 py-3 border-b border-stone-200 flex flex-wrap items-center justify-between gap-2">
+<div><h3 class="font-bold text-sm">Attendance Report Image</h3><p id="mSub" class="text-[11px] text-stone-500"></p></div>
+<div class="flex gap-1.5">
+<button onclick="shareImg()" class="px-3 py-1.5 rounded-lg font-semibold text-xs bg-emerald-600 text-white">Share</button>
+<button onclick="dlImg()" class="px-3 py-1.5 rounded-lg font-semibold text-xs bg-indigo-800 text-white">Download</button>
+<button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600">✕</button>
+</div></div>
+<div class="p-3 overflow-auto flex-1 bg-stone-100"><img id="prev" alt="Attendance" class="max-w-full h-auto rounded-lg border border-stone-300 bg-white mx-auto"><canvas id="cv" class="hidden"></canvas></div>
+<div class="px-4 py-2 border-t border-stone-200 text-[11px] text-stone-500">If Download doesn't start, long-press the image and save it.</div>
+</div></div>
+
+<div id="adm" class="fixed inset-0 z-50 hidden bg-indigo-950/60 items-center justify-center p-3">
+<div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+<div class="px-4 py-3 border-b border-indigo-100 flex items-center justify-between">
+<div><h3 class="font-bold text-sm text-indigo-900">Student Management</h3><p class="text-[11px] text-stone-500">Add ya edit karein (sabko live dikhega)</p></div>
+<button onclick="closeAdmin()" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600">✕</button>
+</div>
+<div class="p-3 overflow-auto flex-1 space-y-3">
+<div id="admForm" class="hidden rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 space-y-2">
+<p id="admFormTitle" class="text-xs font-bold text-indigo-800"></p>
+<input id="aName" placeholder="Student ka naam" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<input id="aEn" placeholder="Enrollment No." class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<select id="aG" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"><option value="1">Group 1 (1 - 35)</option><option value="2">Group 2 (36 - 71)</option></select>
+<div class="flex gap-2 justify-end">
+<button onclick="cancelForm()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-100 text-stone-700">Cancel</button>
+<button onclick="saveStu()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-700 text-white">Save</button>
+</div></div>
+<button onclick="newStu()" class="w-full py-2 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950 hover:bg-amber-300">+ Naya Student Add Karein</button>
+<div id="admList" class="divide-y divide-stone-100 border border-stone-200 rounded-xl"></div>
+</div></div></div>
+
+<div id="pinM" class="fixed inset-0 z-[60] hidden bg-indigo-950/60 items-center justify-center p-3">
+<div class="bg-white rounded-2xl max-w-xs w-full shadow-2xl p-5 space-y-3">
+<h3 class="font-bold text-sm text-indigo-900">Admin Login</h3>
+<input id="emIn" type="email" autocomplete="username" placeholder="Admin email" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<input id="pwIn" type="password" autocomplete="current-password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<div class="flex gap-2 justify-end">
+<button onclick="closePin()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-100 text-stone-700">Cancel</button>
+<button onclick="doLogin()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-700 text-white">Login</button>
+</div></div></div>
+
+<div id="nm" class="fixed inset-0 z-50 hidden bg-indigo-950/60 items-center justify-center p-3">
+<div class="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+<div class="px-4 py-3 border-b border-indigo-100 flex items-center justify-between">
+<div><h3 class="font-bold text-sm text-indigo-900">Naam Copy Karein</h3><p class="text-[11px] text-stone-500">Pehle status chunein</p></div>
+<button onclick="closeNames()" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600">✕</button>
+</div>
+<div class="p-3 space-y-3 overflow-auto flex-1">
+<div class="grid grid-cols-3 gap-2">
+<button onclick="pickNames('P')" data-k="P" class="nb py-2 rounded-lg text-xs font-bold border border-emerald-300 text-emerald-700 bg-emerald-50">✅ Present</button>
+<button onclick="pickNames('A')" data-k="A" class="nb py-2 rounded-lg text-xs font-bold border border-rose-300 text-rose-700 bg-rose-50">❌ Absent</button>
+<button onclick="pickNames('POD')" data-k="POD" class="nb py-2 rounded-lg text-xs font-bold border border-amber-300 text-amber-700 bg-amber-50">🟡 POD</button>
+</div>
+<div id="nmList" class="rounded-xl border border-stone-200 bg-stone-50 p-3 text-[13px] leading-relaxed min-h-[120px] whitespace-pre-line"></div>
+<button onclick="copyNames()" class="w-full py-2.5 rounded-lg text-sm font-bold bg-indigo-700 text-white hover:bg-indigo-800">📋 Copy All</button>
+</div></div></div>
+<script type="module">
+/* ================= 1) FIREBASE CONFIG — yahan apni values paste karein ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyA3J1803r11bfKmBfO9S3X6vsM3tewmBSQ",
+  authDomain: "kaksha-6cce6.firebaseapp.com",
+  projectId: "kaksha-6cce6",
+  storageBucket: "kaksha-6cce6.firebasestorage.app",
+  messagingSenderId: "862101273981",
+  appId: "1:862101273981:web:f73fcf302eaf7e31e82014"
+};
+/* ======================================================================================= */
+
+
+const HAS_CFG=!String(firebaseConfig.apiKey).startsWith('PASTE');
+let CONFIGURED=false; // true tabhi hoga jab Firebase sach me load ho jaye
+let db=null,auth=null,initializeApp,getFirestore,doc,getDoc,setDoc,onSnapshot,getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged;
+const V='https://www.gstatic.com/firebasejs/10.12.2/';
+async function initFirebase(){
+ if(!HAS_CFG){$('cfgWarn').classList.remove('hidden');return}
+ try{
+  const [a,f,u]=await Promise.all([import(V+'firebase-app.js'),import(V+'firebase-firestore.js'),import(V+'firebase-auth.js')]);
+  ({initializeApp}=a);({getFirestore,doc,getDoc,setDoc,onSnapshot}=f);({getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=u);
+  const app=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app);CONFIGURED=true;
+  startStudentsListener();
+  onAuthStateChanged(auth,u=>{admin=!!u;chrome();loadRec()});
+ }catch(e){$('cfgWarn').textContent='⚠️ Firebase load nahi hua (internet check karein ya page http link se kholein): '+(e.message||e);$('cfgWarn').classList.remove('hidden')}
+}
+
+const LECS=[
+['AL301','AL301 Technical Communication'],
+['AL302','AL302 Introduction to Probability and Statistics'],
+['AL303','AL303 Data Structures'],
+['AL304','AL304 Artificial Intelligence'],
+['AL305','AL305 Object Oriented Programming and Methodology (OOPM)'],
+['AIML-314','AIML-314 Python Training'],
+['AIML-315','AIML-315 CRT - Aptitude'],
+['AIML-316','AIML-316 CRT - Comm. Skills'],
+['HOD','HOD Lecture']];
+
+const RAW="NAYAN PATEL:1076|NIKHIL NIKHIL:1077|NIKIL PRAJAPATI:1078|OJASWA MAHOBIYA:1080|OMENDRA SHUKLA:1081|PANKAJ PAWAR:1082|PAVAN SINGH:1083|PAWAN JAISWAL:1084|PAYAL NAGAR:1085|PRACHI NIRMALKAR:1086|PRAGYA SONI:1087|PRAKHAR PRAJAPATI:1088|PRASHANT KUSHWAH:1089|PRASHANT TIWARI:1090|PRATEEK CHOUREY:1091|PRATIKSHA CHAUKASE:1092|PRAVEEN BHAGAT:1093|PREM ANARTHE:1094|PREM VERMA:1095|PRINCE AHIRWAR:1096|PRINCE THAKUR:1097|PRIYANSHOO PATEL:1098|PUSHPENDRA KUSHWAHA:1099|RACHIT MATHUR:1100|RADHIKA YADAV:1101|RAJ DUBEY:1102|RAJ KARMODIYA:1103|RAJ MARAN:1104|RASHID ANSARI:1106|RAVINDRA PAL:1107|RISHABH VERMA:1109|RIYA MEENA:1111|ROHAN VERMA:1112|ROUNAK KUMAR SINGH:1113|RUKMANI KUSHWAH:1114|SAMEER KHAN:1115|SANDEEP KUSHWAHA:1116|SANJAY MEWADA:1117|SANSKAR SAHU:1118|SATYAM LODHI:1120|SAURABH KUMAR:1121|SAYYED YOUSUF ALI:1122|SHIKHA TILAK:1123|SHIVA VERMA:1124|SHIVAM PRAJAPATI:1125|SHIVANI MARAN:1126|SHIVANSH SHRIVASTAVA:1127|SHUBHAM RAJPUT:1128|SIYA NAGAR:1129|SOHAN VERMA:1130|SRISHTI PRAJAPATI:1131|SUJAL BISEN:1132|SUMIT BAGWAN:1133|SUMIT MEWADA:1134|SUMIT VERMA:1135|SUMIT YADAV:1136|SURYANSH JAIN:1137|TANISH KUSHWAHA:1138|UJJWAL SINGH KARN:1139|VAIBHAV VERMA:1140|VAISHNAVI RAI:1141|VANSH CHANDRAVANSHI:1142|VEDANT MAURYA:1143|VEDANT MISHRA:1144|VEDIKA CHOPDE:1145|VIVEK BHAGAT:1146|VIVEK MEHRA:1147|YASH DANGI:1148|YASHWANI DHONDI:1150|YOGESH BANIYA:1151|ZIDAN KHAN:1152";
+const mk=(n,e,i)=>({sno:i+1,name:n,en:e,g:i<35?1:2,st:'P'});
+let S=RAW.split('|').map((x,i)=>{const [n,e]=x.split(':');return mk(n,'0537AL25'+e,i)});
+let mode='full',flt='all',admin=false,dirty=false,taken=false,lastRec={};
+const $=id=>document.getElementById(id);
+const label=(m=mode)=>m==='g1'?'Group 1 (1 - 35)':m==='g2'?'Group 2 (36 - 71)':'Full Class (1 - 71)';
+const act=()=>mode==='g1'?S.filter(s=>s.g===1):mode==='g2'?S.filter(s=>s.g===2):S;
+const lecName=()=>(LECS.find(l=>l[0]===$('lec').value)||[0,'Class Lecture'])[1];
+const on='bg-indigo-800 text-white shadow',off='text-stone-600';
+
+/* ---------- header / buttons ---------- */
+const hb='px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white/15 text-white hover:bg-white/25';
+function chrome(){
+ if(admin){
+  $('hdrBtns').innerHTML=`<button id="saveBtn" onclick="saveAtt()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950">💾 Save</button>
+  <button onclick="openAdmin()" class="${hb}">👥 Students</button><button onclick="openNames()" class="${hb}">📝 Names</button><button onclick="copyText()" class="${hb}">💬 Copy</button><button onclick="openModal()" class="${hb}">🖼️ Image</button><button onclick="doLogout()" class="${hb}">Logout</button>`;
+  $('botBtns').innerHTML=`<button onclick="saveAtt()" class="saveB px-3.5 py-2 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950">💾 Save</button><button onclick="openModal()" class="px-3 py-2 rounded-lg text-xs font-bold bg-indigo-800 text-white">🖼️</button>`;
+ }else{
+  $('hdrBtns').innerHTML=`<button onclick="openPin()" class="${hb}">⚙️ Admin</button>`;
+  $('botBtns').innerHTML='';
+ }
+ $('bulk').classList.toggle('hidden',!admin);$('bulk').classList.toggle('flex',admin);
+ $('q').placeholder=admin?'🔍 Find a student by name or roll no.':'🔍 Apna naam ya roll no. dhoondhein';
+ saveUi();upd();
+}
+function saveUi(){
+ document.querySelectorAll('#saveBtn,.saveB').forEach(b=>{b.textContent=dirty?'💾 Save*':'💾 Saved';b.style.opacity=dirty?'1':'.7'});
+ const st=$('status');
+ if(!CONFIGURED){st.textContent='';return}
+ if(admin)st.innerHTML=dirty?'<span class="text-amber-600">● Unsaved changes — Save dabayein</span>':taken?'<span class="text-emerald-600">✔ Is lecture ki attendance saved hai</span>':'<span class="text-stone-500">Is lecture ki attendance abhi save nahi hui</span>';
+ else st.innerHTML=taken?'<span class="text-emerald-600">✔ Attendance lag chuki hai (live)</span>':'<span class="text-amber-600">⏳ Is lecture ki attendance abhi nahi lagi</span>';
+}
+
+/* ---------- tabs / filters / state ---------- */
+function tabs(){$('tabs').innerHTML=[['full','Full (1-71)'],['g1','Group 1'],['g2','Group 2']].map(([m,t])=>`<button onclick="setMode('${m}')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-xs font-bold ${m===mode?on:off}">${t}</button>`).join('')}
+function filters(){$('filters').innerHTML=['all','P','A','POD'].map(f=>`<button onclick="setFlt('${f}')" class="px-2 py-1 rounded ${f===flt?'bg-stone-800 text-white':'text-stone-600'}">${f==='all'?'All':f}</button>`).join('')}
+function setMode(m){mode=m;tabs();upd();toast('Switched to '+label())}
+function setFlt(f){flt=f;filters();render()}
+function setSt(n,s){if(!admin)return;const x=S.find(v=>v.sno===n);if(x){x.st=s;dirty=true;saveUi();upd()}}
+function markAll(s){if(!admin)return;const l=act();l.forEach(x=>x.st=s);dirty=true;saveUi();upd();toast(`Marked all ${l.length} as ${s}`)}
+function upd(){const a=act(),c=s=>a.filter(x=>x.st===s).length,show=admin||taken;
+$('cnt').textContent=S.length;$('sT').textContent=a.length;
+$('sP').textContent=show?c('P'):'–';$('sA').textContent=show?c('A'):'–';$('sD').textContent=show?c('POD'):'–';
+$('badge').textContent=label();$('mLab').textContent=label();$('mSt').textContent=show?`P: ${c('P')} | A: ${c('A')} | POD: ${c('POD')}`:'Attendance pending';render()}
+function render(){const q=$('q').value.trim().toLowerCase();let l=act();
+if(flt!=='all')l=l.filter(s=>s.st===flt);
+if(q)l=l.filter(s=>s.name.toLowerCase().includes(q)||s.en.toLowerCase().includes(q)||String(s.sno)===q);
+if(!l.length){$('list').innerHTML='<div class="p-6 text-center text-stone-400 text-xs">No students found.</div>';return}
+const view=admin||taken;
+$('list').innerHTML=l.map(s=>{const P=s.st==='P',A=s.st==='A',D=s.st==='POD';
+const bg=view&&A?'bg-rose-50/70':view&&D?'bg-amber-50/70':'bg-white',nc=view&&A?'text-rose-900':view&&D?'text-amber-900':'text-stone-900';
+const b=(on,c)=>on?`${c} text-white`:'bg-white text-stone-500 border-stone-200';
+const bd=!view?'border-stone-200':A?'border-rose-400':D?'border-amber-400':'border-emerald-400';
+const av=!view?'bg-stone-100 text-stone-500':A?'bg-rose-200 text-rose-800':D?'bg-amber-200 text-amber-800':'bg-emerald-100 text-emerald-800';
+const right=admin?`<div class="flex gap-1 shrink-0">
+<button onclick="setSt(${s.sno},'P')" class="sb w-8 h-8 rounded-full text-xs font-bold border ${b(P,'bg-emerald-600 border-emerald-600')}">P</button>
+<button onclick="setSt(${s.sno},'A')" class="sb w-8 h-8 rounded-full text-xs font-bold border ${b(A,'bg-rose-600 border-rose-600')}">A</button>
+<button onclick="setSt(${s.sno},'POD')" class="sb px-2.5 h-8 rounded-full text-[10px] font-bold border ${b(D,'bg-amber-500 border-amber-500')}">POD</button></div>`
+:`<span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold ${!view?'bg-stone-100 text-stone-400':P?'bg-emerald-100 text-emerald-700':A?'bg-rose-600 text-white':'bg-amber-500 text-white'}">${!view?'—':P?'Present':A?'Absent':'POD'}</span>`;
+return `<div class="row border-l-4 ${bd} flex items-center justify-between gap-2 px-3 py-2 ${bg}">
+<div class="flex items-center gap-2 min-w-0 flex-1"><span class="mono text-[11px] font-semibold text-stone-400 w-5 shrink-0 text-right">${s.sno}</span><span class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${av}">${s.name[0]}</span>
+<div class="leading-tight min-w-0 break-words"><div class="font-semibold text-[13px] sm:text-sm capitalize ${nc}">${s.name.toLowerCase()}</div><div class="text-[10px] text-stone-400">${s.en}</div></div></div>${right}</div>`}).join('')}
+
+/* ---------- Firestore: attendance record (lecture + date) ---------- */
+const docKey=()=>`${$('dt').value}_${$('lec').value}`;
+let unsubRec=null,prevKey=null;
+function applyRec(rec,exists){lastRec=rec||{};taken=!!exists;S.forEach(s=>s.st=exists?(lastRec[s.en]||'P'):'P');dirty=false;saveUi();upd()}
+async function loadRec(){
+ if(unsubRec){unsubRec();unsubRec=null}
+ prevKey=docKey();
+ if(!CONFIGURED||!$('dt').value){applyRec({},false);return}
+ const ref=doc(db,'attendance',docKey());
+ if(admin){
+  try{const d=await getDoc(ref);applyRec(d.exists()?d.data().rec:{},d.exists())}catch(e){toast('Load error: '+(e.code||e.message))}
+ }else{
+  unsubRec=onSnapshot(ref,d=>applyRec(d.exists()?d.data().rec:{},d.exists()),e=>toast('Load error: '+(e.code||e.message)));
+ }
+}
+let pend=null;
+function onPick(el){ // lecture/date change
+ if(admin&&dirty&&!confirm('Unsaved changes hain. Bina save kiye chhod dein?')){const [d,l]=prevKey.split('_');$('dt').value=d;$('lec').value=l;return}
+ loadRec()}
+async function saveAtt(){
+ if(!admin||!CONFIGURED)return toast('Pehle admin login karein');
+ if(!$('dt').value)return toast('Date chunein');
+ const rec={};S.forEach(s=>{if(s.st!=='P')rec[s.en]=s.st});
+ try{await setDoc(doc(db,'attendance',docKey()),{date:$('dt').value,lec:$('lec').value,rec,updatedAt:Date.now()});
+  lastRec=rec;taken=true;dirty=false;saveUi();upd();toast('✅ Saved — ab sabko dikhegi')}
+ catch(e){toast('Save fail: '+(e.code||e.message))}
+}
+
+/* ---------- Firestore: student list ---------- */
+const sRef=()=>doc(db,'config','students');
+function startStudentsListener(){
+ if(!CONFIGURED)return;
+ onSnapshot(sRef(),d=>{
+  if(d.exists()&&Array.isArray(d.data().list)&&d.data().list.length){
+   S=d.data().list.map(x=>({sno:x.sno,name:x.name,en:x.en,g:x.g,st:'P'}));
+   if(taken||admin)S.forEach(s=>s.st=lastRec[s.en]||(taken?'P':'P'));
+   upd();if(admin&&!$('adm').classList.contains('hidden'))renderAdm();
+  }
+ },()=>{});
+}
+async function persistStudents(){
+ if(!CONFIGURED)return toast('Firebase config nahi hai');
+ await setDoc(sRef(),{list:S.map(({sno,name,en,g})=>({sno,name,en,g}))});
+}
+
+/* ---------- Auth ---------- */
+function openPin(){if(!CONFIGURED)return toast('Pehle Firebase config bharein');$('emIn').value='';$('pwIn').value='';$('pinM').classList.remove('hidden');$('pinM').classList.add('flex');setTimeout(()=>$('emIn').focus(),50)}
+function closePin(){$('pinM').classList.add('hidden');$('pinM').classList.remove('flex')}
+async function doLogin(){try{await signInWithEmailAndPassword(auth,$('emIn').value.trim(),$('pwIn').value);closePin()}catch(e){toast('Login fail: email/password galat')}}
+async function doLogout(){if(dirty&&!confirm('Unsaved changes hain. Logout karein?'))return;await signOut(auth)}
+
+/* ---------- Report image (unchanged) ---------- */
+function rr(c,x,y,w,h,r,f,s){c.beginPath();c.roundRect(x,y,w,h,r);if(f){c.fillStyle=f;c.fill()}if(s){c.strokeStyle=s;c.lineWidth=1;c.stroke()}}
+function makeImg(){const cv=$('cv'),c=cv.getContext('2d'),a=act();
+const lec=lecName(),rd=$('dt').value;
+const fd=rd?new Date(rd+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}):'';
+const P=a.filter(s=>s.st==='P'),A=a.filter(s=>s.st==='A'),D=a.filter(s=>s.st==='POD');
+const h=Math.ceil(a.length/2),L=mode==='full'?a.filter(s=>s.g===1):a.slice(0,h),R=mode==='full'?a.filter(s=>s.g===2):a.slice(h);
+const W=920,rows=Math.max(L.length,R.length),RH=32,TY=145,H=TY+36+rows*RH+30;
+cv.width=W;cv.height=H;c.fillStyle='#fff';c.fillRect(0,0,W,H);
+c.strokeStyle='#cbd5e1';c.lineWidth=2;c.strokeRect(14,14,W-28,H-28);
+rr(c,24,24,W-48,108,10,'#eef2ff','#c7d2fe');
+c.textAlign='left';c.fillStyle='#3730a3';c.font='bold 13px Poppins,sans-serif';c.fillText('Kaksha  •  Attendance  •  '+label().toUpperCase(),42,50);
+c.fillStyle='#0f172a';c.font='bold 25px Poppins,sans-serif';c.fillText(lec,42,82);
+c.fillStyle='#475569';c.font='600 14px Poppins,sans-serif';c.fillText('Date: '+fd,42,110);
+const cards=[['TOTAL',a.length,'#f1f5f9','#cbd5e1','#0f172a'],['P (PRESENT)',P.length,'#ecfdf5','#a7f3d0','#059669'],['A (ABSENT)',A.length,'#fef2f2','#fecdd3','#e11d48'],['POD (LEAVE)',D.length,'#fffbeb','#fde68a','#d97706']];
+let cx=W-36-424;
+cards.forEach(k=>{rr(c,cx,36,100,84,8,k[2],k[3]);c.fillStyle=k[4];c.textAlign='center';c.font='bold 11px Poppins,sans-serif';c.fillText(k[0],cx+50,58);c.font='bold 26px Poppins,sans-serif';c.fillText(String(k[1]),cx+50,98);cx+=108});
+c.textAlign='left';
+const cw=(W-62)/2,x1=24,x2=24+cw+14;
+[x1,x2].forEach(x=>{rr(c,x,TY,cw,30,6,'#312e81');c.fillStyle='#fff';c.font='bold 11px Poppins,sans-serif';c.fillText('S.NO',x+12,TY+19);c.fillText('STUDENT NAME (ENROLLMENT NO.)',x+52,TY+19);c.fillText('STATUS',x+cw-57,TY+19)});
+function col(l,sx){l.forEach((s,i)=>{const y=TY+36+i*RH;let f=i%2?'#f8fafc':'#fff',b='#e2e8f0';
+if(s.st==='A'){f='#fef2f2';b='#fecdd3'}else if(s.st==='POD'){f='#fffbeb';b='#fde68a'}
+rr(c,sx,y,cw,RH-3,5,f,b);
+c.fillStyle=s.st==='A'?'#be123c':s.st==='POD'?'#b45309':'#475569';c.font='bold 12px Poppins,sans-serif';c.fillText(String(s.sno).padStart(2,'0')+'.',sx+12,y+19);
+c.fillStyle=s.st==='A'?'#881337':s.st==='POD'?'#78350f':'#0f172a';c.font='bold 12.5px Poppins,sans-serif';c.fillText(s.name,sx+52,y+19);
+const nw=c.measureText(s.name).width;c.fillStyle='#64748b';c.font='500 11.5px Poppins,sans-serif';c.fillText('('+s.en+')',sx+58+nw,y+19);
+const bx=sx+cw-58,by=y+4,m={P:['#dcfce7','#86efac','#15803d','P'],A:['#e11d48','#be123c','#fff','A'],POD:['#f59e0b','#d97706','#fff','POD']}[s.st];
+rr(c,bx,by,48,21,5,m[0],m[1]);c.fillStyle=m[2];c.font='bold 12px Poppins,sans-serif';c.textAlign='center';c.fillText(m[3],bx+24,by+15);c.textAlign='left'})}
+col(L,x1);col(R,x2);
+return cv.toDataURL('image/png')}
+function openModal(){$('prev').src=makeImg();$('mSub').textContent='Mode: '+label();$('modal').classList.remove('hidden');$('modal').classList.add('flex')}
+function closeModal(){$('modal').classList.add('hidden');$('modal').classList.remove('flex')}
+function dlImg(){const l=lecName().replace(/[^a-zA-Z0-9_-]/g,'_');const a=document.createElement('a');a.download=`Attendance_${l}_${mode}_${$('dt').value}.png`;a.href=$('cv').toDataURL('image/png');a.click();toast('Download requested')}
+function shareImg(){$('cv').toBlob(async b=>{if(!b)return;const f=new File([b],'Attendance_Report.png',{type:'image/png'});
+if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({title:'Attendance',text:lecName()+' ('+label()+')',files:[f]})}catch(e){}}else dlImg()},'image/png')}
+async function clip(t){try{await navigator.clipboard.writeText(t)}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(_){}document.body.removeChild(ta)}}
+async function copyText(){const a=act(),A=a.filter(s=>s.st==='A'),D=a.filter(s=>s.st==='POD');
+let t=`*ATTENDANCE REPORT*\nLecture: *${lecName()}*\nDate: ${$('dt').value}\nGroup: ${label()}\nP: *${a.filter(s=>s.st==='P').length}* | A: *${A.length}* | POD: *${D.length}*\n\n`;
+if(A.length)t+=`*Absent - A (${A.length}):*\n`+A.map(s=>`${s.sno}. ${s.name} (${s.en})`).join('\n')+'\n\n';
+if(D.length)t+=`*On Leave - POD (${D.length}):*\n`+D.map(s=>`${s.sno}. ${s.name} (${s.en})`).join('\n');
+if(!A.length&&!D.length)t+='All students are Present (P)!';
+if(location.protocol.startsWith('http'))t+=`\n\nApni attendance yahan dekhein: ${location.origin}${location.pathname}`;
+await clip(t);toast('Copied report text!')}
+let tt;function toast(m){$('toastMsg').textContent=m;const t=$('toast');t.classList.remove('translate-y-20','opacity-0');clearTimeout(tt);tt=setTimeout(()=>t.classList.add('translate-y-20','opacity-0'),2400)}
+
+/* ---------- Names copy ---------- */
+let nmSt='P',nmText='';
+function openNames(){$('nm').classList.remove('hidden');$('nm').classList.add('flex');pickNames(nmSt)}
+function closeNames(){$('nm').classList.add('hidden');$('nm').classList.remove('flex')}
+function pickNames(st){nmSt=st;document.querySelectorAll('.nb').forEach(b=>{b.classList.toggle('ring-2',b.dataset.k===st);b.classList.toggle('ring-indigo-500',b.dataset.k===st)});
+const list=act().filter(x=>x.st===st);nmText=list.map(x=>x.name).join('\n');
+$('nmList').textContent=list.length?`(${list.length})\n`+nmText:'Koi student nahi'}
+async function copyNames(){if(!nmText){toast('Copy karne ke liye koi naam nahi');return}await clip(nmText);toast('Naam copy ho gaye!')}
+
+/* ---------- Student management (admin) ---------- */
+function openAdmin(){$('adm').classList.remove('hidden');$('adm').classList.add('flex');cancelForm();renderAdm()}
+function closeAdmin(){$('adm').classList.add('hidden');$('adm').classList.remove('flex')}
+function renderAdm(){$('admList').innerHTML=[...S].sort((a,b)=>a.sno-b.sno).map(s=>`<div class="flex items-center justify-between gap-2 px-3 py-2">
+<div class="min-w-0"><div class="text-[13px] font-semibold capitalize truncate">${s.sno}. ${s.name.toLowerCase()}</div><div class="text-[10px] text-stone-400">${s.en} • G${s.g}</div></div>
+<button onclick="editStu(${s.sno})" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">Edit</button></div>`).join('')}
+function showForm(title,name,en,g,id){$('admFormTitle').textContent=title;$('aName').value=name;$('aEn').value=en;$('aG').value=String(g);$('admForm').dataset.id=id;$('admForm').classList.remove('hidden');$('aName').focus()}
+function newStu(){showForm('Naya Student',"","",mode==='g2'?2:1,'')}
+function editStu(sno){const x=S.find(v=>v.sno===sno);if(x)showForm('Edit: '+x.sno+'. '+x.name,x.name,x.en,x.g,String(sno))}
+function cancelForm(){$('admForm').classList.add('hidden')}
+async function saveStu(){const name=$('aName').value.trim().toUpperCase(),en=$('aEn').value.trim().toUpperCase(),g=Number($('aG').value),id=$('admForm').dataset.id;
+if(!name||!en){toast('Naam aur enrollment dono bharein');return}
+if(id){const x=S.find(v=>v.sno===Number(id));x.name=name;x.en=en;x.g=g}
+else{const sno=Math.max(0,...S.map(v=>v.sno))+1;S.push({sno,name,en,g,st:'P'})}
+try{await persistStudents();toast('Student save ho gaya')}catch(e){toast('Save fail: '+(e.code||e.message))}
+cancelForm();renderAdm();upd()}
+
+/* ---------- init ---------- */
+$('lec').innerHTML=LECS.map(l=>`<option value="${l[0]}">${l[1]}</option>`).join('');
+$('q').addEventListener('input',render);$('lec').addEventListener('change',onPick);$('dt').addEventListener('change',onPick);
+const d=new Date();$('dt').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+Object.assign(window,{setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu});
+tabs();filters();chrome();loadRec();initFirebase();
+</script>
+</body>
+</html>
