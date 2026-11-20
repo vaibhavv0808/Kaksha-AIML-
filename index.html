@@ -111,28 +111,12 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 <h3 class="font-bold text-sm text-indigo-900">Admin Login</h3>
 <input id="emIn" type="email" autocomplete="username" placeholder="Admin email" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
 <input id="pwIn" type="password" autocomplete="current-password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<input id="codeIn" autocomplete="off" placeholder="Class code" onkeydown="if(event.key==='Enter')doLogin()" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm uppercase outline-none focus:border-indigo-600">
 <div class="flex gap-2 justify-end">
 <button onclick="closePin()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-100 text-stone-700">Cancel</button>
 <button onclick="doLogin()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-700 text-white">Login</button>
 </div></div></div>
 
-
-<div id="ncM" class="fixed inset-0 z-50 hidden bg-indigo-950/60 items-center justify-center p-3">
-<div class="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-<div class="px-4 py-3 border-b border-indigo-100 flex items-center justify-between">
-<div><h3 class="font-bold text-sm text-indigo-900">➕ Create New Class</h3><p class="text-[11px] text-stone-500">Separate students and attendance for each class</p></div>
-<button onclick="closeNc()" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600">✕</button></div>
-<div class="p-3 overflow-auto flex-1 space-y-3">
-<div><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Class name</label>
-<input id="ncName" placeholder="Jaise: AIML Set-A" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"></div>
-<div><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Subjects (one per line)</label>
-<textarea id="ncSubs" rows="4" placeholder="AL301 Technical Communication&#10;AL303 Data Structures" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"></textarea></div>
-<div><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Students (one per line: NAME:ENROLLMENT)</label>
-<textarea id="ncStu" rows="7" placeholder="RAHUL SHARMA:0537AL251001&#10;PRIYA VERMA:0537AL251002" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-xs font-mono outline-none focus:border-indigo-600"></textarea>
-<p class="text-[10px] text-stone-400 mt-1">The first half of the students go to Group 1, the rest to Group 2. You can change this later from Students.</p></div>
-<div class="flex gap-2 justify-end"><button onclick="closeNc()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-100 text-stone-700">Cancel</button>
-<button onclick="createClass()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-700 text-white">Class Banayein</button></div>
-</div></div></div>
 
 <div id="subM" class="fixed inset-0 z-50 hidden bg-indigo-950/60 items-center justify-center p-3">
 <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
@@ -182,7 +166,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 
 /* ---------- Data model ----------
- Original class (AIML Set-B): students -> config/students , attendance -> attendance/{date}_{subject}
+ Set-B (AIML Set-B, original): students -> config/students , attendance -> attendance/{date}_{subject}
  New classes           : classes/{id} {name,lecs,list}  , attendance -> classes/{id}/attendance/{date}_{subject}
  Class list            : config/classes {list:[{id,name}], defaultLecs:[...]}                              */
 const DEFAULT_ID='default',DEFAULT_NAME='AIML Set-B';
@@ -197,14 +181,23 @@ const BUILTIN_LECS=[
 ['AIML-316','AIML-316 CRT - Comm. Skills'],
 ['HOD','HOD Lecture']].map(([id,name])=>({id,name}));
 const RAW="NAYAN PATEL:1076|NIKHIL NIKHIL:1077|NIKIL PRAJAPATI:1078|OJASWA MAHOBIYA:1080|OMENDRA SHUKLA:1081|PANKAJ PAWAR:1082|PAVAN SINGH:1083|PAWAN JAISWAL:1084|PAYAL NAGAR:1085|PRACHI NIRMALKAR:1086|PRAGYA SONI:1087|PRAKHAR PRAJAPATI:1088|PRASHANT KUSHWAH:1089|PRASHANT TIWARI:1090|PRATEEK CHOUREY:1091|PRATIKSHA CHAUKASE:1092|PRAVEEN BHAGAT:1093|PREM ANARTHE:1094|PREM VERMA:1095|PRINCE AHIRWAR:1096|PRINCE THAKUR:1097|PRIYANSHOO PATEL:1098|PUSHPENDRA KUSHWAHA:1099|RACHIT MATHUR:1100|RADHIKA YADAV:1101|RAJ DUBEY:1102|RAJ KARMODIYA:1103|RAJ MARAN:1104|RASHID ANSARI:1106|RAVINDRA PAL:1107|RISHABH VERMA:1109|RIYA MEENA:1111|ROHAN VERMA:1112|ROUNAK KUMAR SINGH:1113|RUKMANI KUSHWAH:1114|SAMEER KHAN:1115|SANDEEP KUSHWAHA:1116|SANJAY MEWADA:1117|SANSKAR SAHU:1118|SATYAM LODHI:1120|SAURABH KUMAR:1121|SAYYED YOUSUF ALI:1122|SHIKHA TILAK:1123|SHIVA VERMA:1124|SHIVAM PRAJAPATI:1125|SHIVANI MARAN:1126|SHIVANSH SHRIVASTAVA:1127|SHUBHAM RAJPUT:1128|SIYA NAGAR:1129|SOHAN VERMA:1130|SRISHTI PRAJAPATI:1131|SUJAL BISEN:1132|SUMIT BAGWAN:1133|SUMIT MEWADA:1134|SUMIT VERMA:1135|SUMIT YADAV:1136|SURYANSH JAIN:1137|TANISH KUSHWAHA:1138|UJJWAL SINGH KARN:1139|VAIBHAV VERMA:1140|VAISHNAVI RAI:1141|VANSH CHANDRAVANSHI:1142|VEDANT MAURYA:1143|VEDANT MISHRA:1144|VEDIKA CHOPDE:1145|VIVEK BHAGAT:1146|VIVEK MEHRA:1147|YASH DANGI:1148|YASHWANI DHONDI:1150|YOGESH BANIYA:1151|ZIDAN KHAN:1152";
+const SEEDA="AALIYA NAAZ:0537AL251001|AARTI MEWADA:0537AL251002|ABHISHEK GUPTA:0537AL251003|ABHISHEK TRIVEDI:0537AL251004|ADESH MESHRAM:0537AL251005|ADITYA KUMAR:0537AL251006|AKSHAT JAISWAL:0537AL251007|AMAN AMAN:0537AL251008|AMAN SINGH:0537AL251009|AMIT SHUKLA:0537AL251010|ANAMIKA SONI:0537AL251011|ANANYA BHAGAT:0537AL251012|ANIT PRAJAPATI:0537AL251013|ANKIT YADAV:0537AL251014|ANKUSH BORKAR:0537AL251015|ANURAG VERMA:0537AL251016|ARJU PATEL:0537AL251017|ARYAN PARASHAR:0537AL251019|ARYAN VERMA:0537AL251020|ASTHA ASTHA:0537AL251021|ASTITVA MISHRA:0537AL251022|AVINA AVINA:0537AL251023|AYUSH PANWAR:0537AL251024|AYUSH SHARNAGAT:0537AL251026|BALKRISHNA JAISWAL:0537AL251027|BHANU SONI:0537AL251028|BHUPENDRA SAHU:0537AL251029|CHHAVI PAWAR:0537AL251030|DEEPESH KUMAR:0537AL251031|DHAMAN VERMA:0537AL251033|DHAPPI MARAN:0537AL251034|DIVYANSHU MISHRA:0537AL251035|DURGESH RAMNANI:0537AL251036|GARIMA PARIHAR:0537AL251037|GOLU BUNKAR:0537AL251038|HARISH WARVADE:0537AL251039|HARSHA SAWARKAR:0537AL251041|HARSHITA PATEL:0537AL251042|HIMANSHU RAJ:0537AL251043|ISHA MEWADA:0537AL251044|ISHIKA SHARMA:0537AL251045|JAY PRAJAPATI:0537AL251046|JAY VISHWAKARMA:0537AL251047|JAYA GIRI:0537AL251048|KAJAL VERMA:0537AL251049|KANCHAN GALERIYA:0537AL251050|KANISHK GOUR:0537AL251051|KARAN SINGH:0537AL251052|KARTIKEYA MISHRA:0537AL251053|KESHAV KORI:0537AL251054|KHUSHI RAJPUT:0537AL251055|KHUSHI RATHORE:0537AL251056|KRISHNA KUMAR GUPTA:0537AL251057|KSHITIJ SINGH PARIHAR:0537AL251058|KUMKUM GIRI:0537AL251059|KUSHAGRA KUSHAGRA:0537AL251060|LAXMAN SINGH LODHI:0537AL251061|LUCKY GUPTA:0537AL251062|LUCKY TIWARI:0537AL251063|LUCKY YADAV:0537AL251064|MANAV RAJESHRAO BORSE:0537AL251066|MANISH KUMAR AHIRWAR:0537AL251067|MAYANK MADANKAR:0537AL251068|MAYANK SEN:0537AL251069|MAYURI CHOUDHARY:0537AL251070|MOHAMMAD MUSA UDDIN QURE:0537AL251071|MUSKAN MEWADA:0537AL251072|MUSKAN MISHRA:0537AL251073|NANDINI CHOUDHARY:0537AL251074|NAWAZ KHAN:0537AL251075";
+const seedFor=id=>id===DEFAULT_ID?defaultStudents():SEEDA.split('|').map((x,i)=>{const [n,e]=x.split(':');return{sno:i+1,name:n,en:e,g:i<35?1:2,st:'P'}});
 const defaultStudents=()=>RAW.split('|').map((x,i)=>{const [n,e]=x.split(':');return{sno:i+1,name:n,en:'0537AL25'+e,g:i<35?1:2,st:'P'}});
 
-let CLASSES=[{id:DEFAULT_ID,name:DEFAULT_NAME}],regDefLecs=null,LECS=BUILTIN_LECS;
+const SETA_ID='seta';
+const CLASSES=[{id:SETA_ID,name:'AIML Set-A'},{id:DEFAULT_ID,name:DEFAULT_NAME}];
+/* Class codes: type the code at login to choose which class you can edit (same Firebase email/password for both). */
+const CODES={'0537AL70A':'seta','0537AL71B':'default'};
+let loginCls=null;
+const savedCls=()=>{try{return localStorage.getItem('kaksha-mycls')}catch(e){return null}};
+let myCls=null;
+let regDefLecs=null,LECS=BUILTIN_LECS;
 const hashCls=()=>decodeURIComponent(location.hash.replace(/^#/,''));
 let cls=hashCls()||(()=>{try{return localStorage.getItem('kaksha-cls')}catch(e){return null}})()||DEFAULT_ID;
+if(!CLASSES.some(c=>c.id===cls))cls=DEFAULT_ID;
 const isDef=()=>cls===DEFAULT_ID;
-if(!isDef())LECS=[];
-let S=isDef()?defaultStudents():[];
+let S=seedFor(cls);
 let mode='full',flt='all',admin=false,dirty=false,taken=false,lastRec={};
 const TG='__tg';let tgRec={},tgExists=false,LD={mode:'none',ov:{},rec:{}};
 
@@ -227,7 +220,12 @@ async function initFirebase(){
   ({initializeApp}=a);({getFirestore,doc,getDoc,setDoc,onSnapshot}=f);({getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=u);
   const app=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app);CONFIGURED=true;
   listenRegistry();listenStudents();
-  onAuthStateChanged(auth,u=>{admin=!!u;chrome();loadRec()});
+  onAuthStateChanged(auth,u=>{
+   const c=loginCls||savedCls();
+   myCls=u&&Object.values(CODES).includes(c)?c:null;
+   if(u&&!myCls){signOut(auth);return}
+   if(myCls&&myCls!==cls){switchClass(myCls);return}
+   admin=(myCls===cls);chrome();loadRec()});
  }catch(e){$('cfgWarn').textContent='⚠️ Firebase failed to load (check your internet or open the page from its web link): '+(e.message||e);$('cfgWarn').classList.remove('hidden');fallbackDefault()}
 }
 function fallbackDefault(){if(!isDef()){cls=DEFAULT_ID;S=defaultStudents();setLecs(BUILTIN_LECS);fillClassSel();upd()}}
@@ -237,10 +235,10 @@ const hb='px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white/15 text-white 
 function chrome(){
  if(admin){
   $('hdrBtns').innerHTML=`<button id="saveBtn" onclick="saveAtt()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950">💾 Save</button>
-  <button onclick="openNc()" class="${hb}">➕ Class</button><button onclick="openSub()" class="${hb}">📚 Subjects</button><button onclick="openAdmin()" class="${hb}">👥 Students</button><button onclick="openNames()" class="${hb}">📝 Names</button><button onclick="copyText()" class="${hb}">💬 Copy</button><button onclick="openModal()" class="${hb}">🖼️ Image</button><button onclick="doLogout()" class="${hb}">Logout</button>`;
+  <button onclick="openSub()" class="${hb}">📚 Subjects</button><button onclick="openAdmin()" class="${hb}">👥 Students</button><button onclick="openNames()" class="${hb}">📝 Names</button><button onclick="copyText()" class="${hb}">💬 Copy</button><button onclick="openModal()" class="${hb}">🖼️ Image</button><button onclick="doLogout()" class="${hb}">Logout</button>`;
   $('botBtns').innerHTML=`<button onclick="saveAtt()" class="saveB px-3.5 py-2 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950">💾 Save</button><button onclick="openModal()" class="px-3 py-2 rounded-lg text-xs font-bold bg-indigo-800 text-white">🖼️</button>`;
  }else{
-  $('hdrBtns').innerHTML=`<button onclick="openPin()" class="${hb}">⚙️ Admin</button>`;
+  $('hdrBtns').innerHTML=myCls?`<button onclick="switchClass('${myCls}')" class="${hb}">✏️ My class</button><button onclick="doLogout()" class="${hb}">Logout</button>`:`<button onclick="openPin()" class="${hb}">⚙️ Admin</button>`;
   $('botBtns').innerHTML='';
  }
  $('bulk').classList.toggle('hidden',!admin);$('bulk').classList.toggle('flex',admin);
@@ -275,9 +273,9 @@ function switchClass(id){
  if(admin&&dirty&&!confirm('You have unsaved changes. Switch class anyway?')){$('cls').value=cls;return}
  cls=id;try{localStorage.setItem('kaksha-cls',id)}catch(e){}
  history.replaceState(null,'','#'+encodeURIComponent(id));
- mode='full';flt='all';S=isDef()?defaultStudents():[];lastRec={};taken=false;dirty=false;
- $('lec').innerHTML='';setLecs(isDef()?(regDefLecs||BUILTIN_LECS):[]);
- fillClassSel();tabs();filters();saveUi();upd();listenStudents();loadRec();
+ mode='full';flt='all';S=seedFor(cls);lastRec={};taken=false;dirty=false;
+ $('lec').innerHTML='';setLecs(regDefLecs||BUILTIN_LECS);
+ admin=(myCls===cls);fillClassSel();tabs();filters();chrome();listenStudents();loadRec();
 }
 window.addEventListener('hashchange',()=>{const h=hashCls();if(h&&h!==cls)switchClass(h)});
 
@@ -285,11 +283,8 @@ window.addEventListener('hashchange',()=>{const h=hashCls();if(h&&h!==cls)switch
 function listenRegistry(){
  onSnapshot(regRef(),d=>{
   const x=d.exists()?d.data():{};
-  CLASSES=[{id:DEFAULT_ID,name:DEFAULT_NAME},...(Array.isArray(x.list)?x.list:[])];
   regDefLecs=Array.isArray(x.defaultLecs)&&x.defaultLecs.length?x.defaultLecs:null;
-  if(isDef())setLecs(regDefLecs||BUILTIN_LECS);
-  if(!CLASSES.some(c=>c.id===cls)){switchClass(DEFAULT_ID);return}
-  fillClassSel();upd();
+  setLecs(regDefLecs||BUILTIN_LECS);fillClassSel();upd();
  },()=>{});
 }
 let unsubStu=null;
@@ -298,10 +293,9 @@ function listenStudents(){
  if(!CONFIGURED)return;
  unsubStu=onSnapshot(stuRef(),d=>{
   const x=d.exists()?d.data():{};
-  if(!isDef()&&Array.isArray(x.lecs))setLecs(x.lecs);
   const prev={};S.forEach(s=>prev[s.en]=s.st);
   if(Array.isArray(x.list)&&x.list.length)S=x.list.map(y=>({sno:y.sno,name:y.name,en:y.en,g:y.g,st:'P'}));
-  else if(!isDef())S=[];
+  else S=seedFor(cls);
   if(dirty)S.forEach(s=>s.st=prev[s.en]||'P');else calc();
   upd();if(admin&&!$('adm').classList.contains('hidden'))renderAdm();
  },()=>{});
@@ -390,10 +384,16 @@ return `<div class="row border-l-4 ${bd} flex items-center justify-between gap-2
 <div class="leading-tight min-w-0 break-words"><div class="font-semibold text-[13px] sm:text-sm capitalize ${nc}">${esc(s.name.toLowerCase())}</div><div class="text-[10px] text-stone-400">${esc(s.en)}${ovOn&&s.st!==(tgRec[s.en]||'P')?' <b class="text-amber-600">✎ Different from TG</b>':''}</div></div></div>${right}</div>`}).join('')}
 
 /* ---------- Auth ---------- */
-function openPin(){if(!CONFIGURED)return toast('Firebase has not loaded yet');$('emIn').value='';$('pwIn').value='';$('pinM').classList.remove('hidden');$('pinM').classList.add('flex');setTimeout(()=>$('emIn').focus(),50)}
+function openPin(){if(!CONFIGURED)return toast('Firebase has not loaded yet');$('emIn').value='';$('pwIn').value='';$('codeIn').value='';$('pinM').classList.remove('hidden');$('pinM').classList.add('flex');setTimeout(()=>$('emIn').focus(),50)}
 function closePin(){$('pinM').classList.add('hidden');$('pinM').classList.remove('flex')}
-async function doLogin(){try{await signInWithEmailAndPassword(auth,$('emIn').value.trim(),$('pwIn').value);closePin()}catch(e){toast('Login failed: wrong email or password')}}
-async function doLogout(){if(dirty&&!confirm('You have unsaved changes. Log out anyway?'))return;await signOut(auth)}
+async function doLogin(){
+ const c=CODES[$('codeIn').value.trim().toUpperCase()];
+ if(!c)return toast('Invalid class code');
+ loginCls=c;try{localStorage.setItem('kaksha-mycls',c)}catch(e){}
+ try{await signInWithEmailAndPassword(auth,$('emIn').value.trim(),$('pwIn').value);closePin()}
+ catch(e){loginCls=null;try{localStorage.removeItem('kaksha-mycls')}catch(_){}toast('Login failed: wrong email or password')}
+}
+async function doLogout(){if(dirty&&!confirm('You have unsaved changes. Log out anyway?'))return;loginCls=null;try{localStorage.removeItem('kaksha-mycls')}catch(e){}await signOut(auth)}
 
 /* ---------- Report image ---------- */
 function rr(c,x,y,w,h,r,f,s){c.beginPath();c.roundRect(x,y,w,h,r);if(f){c.fillStyle=f;c.fill()}if(s){c.strokeStyle=s;c.lineWidth=1;c.stroke()}}
@@ -447,7 +447,7 @@ let nmSt='P',nmText='';
 function openNames(){$('nm').classList.remove('hidden');$('nm').classList.add('flex');pickNames(nmSt)}
 function closeNames(){$('nm').classList.add('hidden');$('nm').classList.remove('flex')}
 function pickNames(st){nmSt=st;document.querySelectorAll('.nb').forEach(b=>{b.classList.toggle('ring-2',b.dataset.k===st);b.classList.toggle('ring-indigo-500',b.dataset.k===st)});
-const list=act().filter(x=>x.st===st);nmText=list.map(x=>x.name).join('\n');
+const list=act().filter(x=>x.st===st);nmText=list.map((x,i)=>(i+1)+'. '+x.name).join('\n');
 $('nmList').textContent=list.length?`(${list.length})\n`+nmText:'No students'}
 async function copyNames(){if(!nmText){toast('No names to copy');return}await clip(nmText);toast('Names copied!')}
 
@@ -474,36 +474,9 @@ S=S.filter(v=>v.sno!==id);S.forEach((s,i)=>s.sno=i+1);
 try{await persistStudents();toast('Student removed')}catch(e){toast('Fail: '+(e.code||e.message))}
 cancelForm();renderAdm();upd()}
 
-/* ---------- New class ---------- */
-function openNc(){$('ncName').value='';$('ncSubs').value='';$('ncStu').value='';$('ncM').classList.remove('hidden');$('ncM').classList.add('flex')}
-function closeNc(){$('ncM').classList.add('hidden');$('ncM').classList.remove('flex')}
-async function createClass(){
- if(!admin||!CONFIGURED)return toast('Please log in as admin first');
- const name=$('ncName').value.trim();
- const subs=$('ncSubs').value.split('\n').map(x=>x.trim()).filter(Boolean);
- const lines=$('ncStu').value.split('\n').map(x=>x.trim()).filter(Boolean);
- if(!name)return toast('Enter a class name');
- if(CLASSES.some(c=>c.name.toLowerCase()===name.toLowerCase()))return toast('A class with this name already exists');
- if(!subs.length)return toast('Enter at least 1 subject');
- const list=[],bad=[],seen=new Set();
- lines.forEach((ln,i)=>{const m=ln.match(/^(.+?)\s*[:,\t|]\s*(.+)$/);if(!m){bad.push(i+1);return}
-  const en=m[2].trim().toUpperCase();if(seen.has(en)){bad.push(i+1);return}seen.add(en);list.push({name:m[1].trim().toUpperCase(),en})});
- if(bad.length)return toast('These student lines are invalid or duplicated: '+bad.slice(0,6).join(', '));
- const half=Math.ceil(list.length/2);list.forEach((s,i)=>{s.sno=i+1;s.g=i<half?1:2});
- const ids=new Set([DEFAULT_ID,...CLASSES.map(c=>c.id)]);
- let id=slug(name)||'class';const b0=id;let k=2;while(ids.has(id))id=b0+'-'+k++;
- const lids=new Set();
- const lecs=subs.map(nm=>{const b=slug(nm)||'subject';let x=b,j=2;while(lids.has(x))x=b+'-'+j++;lids.add(x);return{id:x,name:nm}});
- try{
-  await setDoc(doc(db,'classes',id),{name,lecs,list});
-  await setDoc(regRef(),{list:[...CLASSES.filter(c=>c.id!==DEFAULT_ID),{id,name}]},{merge:true});
-  closeNc();CLASSES=[...CLASSES,{id,name}];switchClass(id);toast('✅ Class created: '+name);
- }catch(e){toast('Fail: '+(e.code||e.message))}
-}
-
 /* ---------- Subjects ---------- */
 let tmpSubs=[];
-function openSub(){$('subCls').textContent='Class: '+className();tmpSubs=LECS.map(l=>({...l}));drawSubs();$('subM').classList.remove('hidden');$('subM').classList.add('flex')}
+function openSub(){$('subCls').textContent='Shared by AIML Set-A and AIML Set-B';tmpSubs=LECS.map(l=>({...l}));drawSubs();$('subM').classList.remove('hidden');$('subM').classList.add('flex')}
 function closeSub(){$('subM').classList.add('hidden');$('subM').classList.remove('flex')}
 function drawSubs(){$('subRows').innerHTML=tmpSubs.map((s,i)=>`<div class="flex gap-2"><input value="${esc(s.name)}" oninput="subInput(${i},this.value)" placeholder="Subject name" class="flex-1 px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"><button onclick="subDel(${i})" class="px-3 rounded-lg bg-stone-100 text-stone-700">✕</button></div>`).join('')}
 function subAdd(){tmpSubs.push({id:null,name:''});drawSubs()}
@@ -515,7 +488,7 @@ async function saveSubs(){
  const out=tmpSubs.filter(s=>s.name.trim()).map(s=>{if(s.id)return{id:s.id,name:s.name.trim()};
   const b=slug(s.name)||'subject';let x=b,j=2;while(used.has(x))x=b+'-'+j++;used.add(x);return{id:x,name:s.name.trim()}});
  try{
-  if(isDef())await setDoc(regRef(),{defaultLecs:out},{merge:true});else await setDoc(doc(db,'classes',cls),{lecs:out},{merge:true});
+  await setDoc(regRef(),{defaultLecs:out},{merge:true});
   setLecs(out);closeSub();toast('Subjects saved');
  }catch(e){toast('Fail: '+(e.code||e.message))}
 }
@@ -525,7 +498,7 @@ $('lec').innerHTML=lecOpts();
 $('q').addEventListener('input',render);$('lec').addEventListener('change',onPick);$('dt').addEventListener('change',onPick);
 $('cls').addEventListener('change',e=>switchClass(e.target.value));
 const d=new Date();$('dt').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-Object.assign(window,{setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,openNc,closeNc,createClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
+Object.assign(window,{setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,switchClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
 fillClassSel();tabs();filters();chrome();loadRec();initFirebase();
 </script>
 </body>
