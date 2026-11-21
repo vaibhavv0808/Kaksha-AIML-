@@ -30,6 +30,16 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 <div id="cfgWarn" class="hidden bg-rose-100 text-rose-800 text-xs font-semibold px-3 py-2 text-center">⚠️ Firebase config is not filled in. Running in demo mode (nothing is saved online).</div>
 
 <main class="flex-1 max-w-4xl w-full mx-auto px-2.5 py-3 space-y-3">
+<div id="stuBox" class="space-y-3"></div>
+<section id="crBox" class="hidden bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2">
+<div class="text-sm font-bold text-indigo-900">📢 Post a notice</div>
+<select id="nType" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"><option value="notice">📌 Notice</option><option value="pdf">📄 PDF / Notes (Drive link)</option><option value="vote">🗳️ Poll (students vote here)</option></select>
+<input id="nTitle" placeholder="Title" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<textarea id="nBody" rows="2" placeholder="Details (optional)" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"></textarea>
+<input id="nLink" placeholder="Link (optional, e.g. Google Drive PDF)" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<textarea id="nOpts" rows="2" placeholder="Poll options, one per line (polls only)" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"></textarea>
+<button onclick="postNotice()" class="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-800 text-white">Post</button>
+</section>
 <section class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-3">
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
 <div class="sm:col-span-3"><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Class</label>
@@ -48,6 +58,7 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 <div id="status" class="text-[11px] font-semibold"></div>
 </section>
 
+<div id="everyoneWrap" class="space-y-3">
 <section class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
 <div class="sm:col-span-7 grid grid-cols-4 gap-1.5">
 <div class="bg-indigo-50 rounded-lg border border-indigo-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-stone-400 block">Total</span><span id="sT" class="text-lg font-bold text-indigo-800 mono">71</span></div>
@@ -65,6 +76,8 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 </div>
 <div id="list" class="divide-y divide-stone-100"></div>
 </section>
+</div>
+<div id="everyoneBtnWrap" class="hidden"><button id="everyoneBtn" onclick="toggleEveryone()" class="w-full py-3 rounded-2xl bg-white border-2 border-indigo-200 text-indigo-800 font-bold text-sm shadow-sm"></button></div>
 </main>
 
 <div class="sticky bottom-0 z-30 bg-white/95 backdrop-blur border-t border-indigo-100 shadow-[0_-4px_12px_rgba(49,46,129,0.08)] px-3 py-2 flex items-center justify-between sm:hidden">
@@ -159,7 +172,7 @@ const firebaseConfig = {
 
 const HAS_CFG=!String(firebaseConfig.apiKey).startsWith('PASTE');
 let CONFIGURED=false;
-let db=null,auth=null,initializeApp,getFirestore,doc,getDoc,setDoc,onSnapshot,getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged;
+let db=null,auth=null,initializeApp,getFirestore,doc,getDoc,setDoc,onSnapshot,collection,updateDoc,deleteDoc,getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged;
 const V='https://www.gstatic.com/firebasejs/10.12.2/';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -217,7 +230,7 @@ async function initFirebase(){
  if(!HAS_CFG){$('cfgWarn').classList.remove('hidden');fallbackDefault();return}
  try{
   const [a,f,u]=await Promise.all([import(V+'firebase-app.js'),import(V+'firebase-firestore.js'),import(V+'firebase-auth.js')]);
-  ({initializeApp}=a);({getFirestore,doc,getDoc,setDoc,onSnapshot}=f);({getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=u);
+  ({initializeApp}=a);({getFirestore,doc,getDoc,setDoc,onSnapshot,collection,updateDoc,deleteDoc}=f);({getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=u);
   const app=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app);CONFIGURED=true;
   listenRegistry();listenStudents();
   onAuthStateChanged(auth,u=>{
@@ -243,7 +256,7 @@ function chrome(){
  }
  $('bulk').classList.toggle('hidden',!admin);$('bulk').classList.toggle('flex',admin);
  $('q').placeholder=admin?'🔍 Find a student by name or roll no.':'🔍 Search your name or roll no.';
- saveUi();upd();
+ saveUi();upd();applyView();
 }
 function saveUi(){
  document.querySelectorAll('#saveBtn,.saveB').forEach(b=>{b.textContent=dirty?'💾 Save*':'💾 Saved';b.style.opacity=dirty?'1':'.7'});
@@ -288,7 +301,7 @@ function listenRegistry(){
  },()=>{});
 }
 let unsubStu=null;
-function listenStudents(){
+function listenStudents(){listenNotices();
  if(unsubStu){unsubStu();unsubStu=null}
  if(!CONFIGURED)return;
  unsubStu=onSnapshot(stuRef(),d=>{
@@ -359,7 +372,7 @@ function setMode(m){mode=m;tabs();upd();toast('Switched to '+label())}
 function setFlt(f){flt=f;filters();render()}
 function setSt(n,s){if(!admin)return;const x=S.find(v=>v.sno===n);if(x){x.st=s;dirty=true;saveUi();upd()}}
 function markAll(s){if(!admin)return;const l=act();l.forEach(x=>x.st=s);dirty=true;saveUi();upd();toast(`Marked all ${l.length} as ${s}`)}
-function upd(){const a=act(),c=s=>a.filter(x=>x.st===s).length,show=admin||taken;
+function upd(){renderHome();const a=act(),c=s=>a.filter(x=>x.st===s).length,show=admin||taken;
 tabs();$('clsName').textContent=className();
 $('cnt').textContent=S.length;$('sT').textContent=a.length;
 $('sP').textContent=show?c('P'):'–';$('sA').textContent=show?c('A'):'–';$('sD').textContent=show?c('POD'):'–';
@@ -498,8 +511,90 @@ $('lec').innerHTML=lecOpts();
 $('q').addEventListener('input',render);$('lec').addEventListener('change',onPick);$('dt').addEventListener('change',onPick);
 $('cls').addEventListener('change',e=>switchClass(e.target.value));
 const d=new Date();$('dt').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-Object.assign(window,{setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,switchClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
+
+/* ================= Student home: login, my status, timetable, notices & polls ================= */
+const ls={g:k=>{try{return localStorage.getItem(k)}catch(e){return null}},s:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},d:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+let myEn=ls.g('kaksha-en'),everyoneOpen=false,NOTICES=[],unsubN=null,tday=null;
+const nCol=()=>isDef()?collection(db,'notices'):collection(db,'classes',cls,'notices');
+const nDoc=id=>isDef()?doc(db,'notices',id):doc(db,'classes',cls,'notices',id);
+function listenNotices(){
+ if(unsubN){unsubN();unsubN=null}NOTICES=[];
+ if(!CONFIGURED)return;
+ unsubN=onSnapshot(nCol(),sn=>{NOTICES=sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);renderHome()},()=>{});
+}
+function applyView(){
+ $('everyoneWrap').classList.toggle('hidden',!admin&&!everyoneOpen);
+ $('everyoneBtnWrap').classList.toggle('hidden',admin);
+ $('everyoneBtn').textContent=everyoneOpen?"🙈 Hide everyone's attendance":"👥 See everyone's attendance";
+ $('crBox').classList.toggle('hidden',!admin);
+}
+function toggleEveryone(){everyoneOpen=!everyoneOpen;applyView();if(everyoneOpen)setTimeout(()=>$('everyoneWrap').scrollIntoView({behavior:'smooth',block:'start'}),50)}
+function stuLogin(){
+ const v=($('enIn').value||'').trim().toUpperCase();if(!v)return;
+ const m=S.find(s=>s.en===v)||(v.length===4?S.find(s=>s.en.endsWith(v)):null);
+ if(!m)return toast('Not found in '+className()+'. Check the class above.');
+ myEn=m.en;ls.s('kaksha-en',myEn);renderHome();toast('Welcome '+m.name.toLowerCase());
+}
+function stuSwitch(){myEn=null;ls.d('kaksha-en');renderHome()}
+function setDay(d){tday=d;renderHome()}
+/* [from slot, to slot, name, teacher, room, group(0=all)] - Set-B timetable */
+const SLOT={1:[575,635],2:[635,695],3:[695,755],4:[755,815],5:[850,910],6:[910,970]};
+const DAYS={
+Mon:[[1,2,'OOPM Lab','Kaushal Sharma','Lab 1',1],[1,2,'AI Lab','Vandana Rai','Lab 2',2],[3,3,'Aptitude','Manish Verma','Room 105',0],[4,4,'Comm. Skill','Manjira Sinha','Room 105',0],[5,5,'Probability & Statistics','Sfurti Verma','Room 105',0],[6,6,'Tech Comm','Shreya G','Room 105',0]],
+Tue:[[1,2,'DSA Lab','KB / MS','Lab 2',0],[3,3,'OOPM','Kaushal Sharma','Room 105',0],[4,4,'Data Structure','Khushboo Bharadwaj','Room 105',0],[5,5,'OOPM','Kaushal Sharma','Room 105',0],[6,6,'Tech Comm','Shreya G','Room 105',0]],
+Wed:[[1,2,'Semester Training – Adv. Python','AC / SS','Lab 2',0],[3,3,'Aptitude','Manish Verma','Room 105',0],[4,4,'Comm. Skill','Manjira Sinha','Room 105',0],[5,5,'Artificial Intelligence','Vandana Rai','Room 105',0],[6,6,'OOPM','Kaushal Sharma','Room 105',0]],
+Thu:[[1,1,'Probability & Statistics','Sfurti Verma','Room 106',0],[2,2,'Library','Nishikant Singh','Room 105',0],[3,3,'Artificial Intelligence','Vandana Rai','Room 105',0],[4,4,'Data Structure','Khushboo Bharadwaj','Room 105',0],[5,6,'DSA Lab','NS / MS','Lab 2',0]],
+Fri:[[1,2,'AI Lab','Vandana Rai','Lab 6',1],[1,2,'OOPM Lab','Kaushal Sharma','Lab 1',2],[3,3,'Probability & Statistics','Sfurti Verma','Room 105',0],[4,4,'Tech Comm','Shreya G','Room 105',0],[5,5,'Artificial Intelligence','Vandana Rai','Room 105',0],[6,6,'Data Structure','Khushboo Bharadwaj','Room 105',0]],
+Sat:[[1,1,'OOPM','Kaushal Sharma','Room 106',0],[2,2,'Probability & Statistics','Sfurti Verma','Room 105',0],[3,4,'Semester Training – Adv. Python','AC / VR','Lab 2',0],[5,5,'Data Structure','Khushboo Bharadwaj','Room 105',0],[6,6,'Artificial Intelligence','Vandana Rai','Room 105',0]]};
+const DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],fm=m=>{const h=Math.floor(m/60);return (h>12?h-12:h)+':'+String(m%60).padStart(2,'0')};
+function ttHtml(me){
+ const real=DN[new Date().getDay()],day=tday||(real==='Sun'?'Mon':real),g=me?me.g:0;
+ const n=new Date(),nm=n.getHours()*60+n.getMinutes();let lunch=false;
+ const rows=DAYS[day].filter(r=>!r[5]||!g||r[5]===g).sort((a,b)=>a[0]-b[0]||a[5]-b[5]).map(r=>{
+  let pre='';if(!lunch&&r[0]>=5){pre='<div class="text-center text-[11px] font-bold text-amber-700 bg-amber-50 py-1.5">🍽 Lunch break 1:35 – 2:10</div>';lunch=true}
+  const a=SLOT[r[0]][0],b=SLOT[r[1]][1],on=day===real&&nm>=a&&nm<b;
+  return pre+`<div class="flex gap-3 px-3 py-2 border-t border-stone-100 ${on?'bg-emerald-100 border-l-4 border-l-emerald-600':''}"><div class="w-16 shrink-0 text-[11px] font-semibold text-stone-400">${fm(a)}<br>${fm(b)}</div><div><div class="text-[13px] font-bold">${esc(r[2])}${r[5]?` <span class="text-[10px] px-1.5 rounded bg-amber-100 text-amber-800">Group ${r[5]}</span>`:''}${on?' <span class="text-[10px] px-1.5 rounded bg-emerald-600 text-white">NOW</span>':''}</div><div class="text-[11px] text-stone-500">${esc(r[3])} • ${esc(r[4])}</div></div></div>`}).join('');
+ const chips=Object.keys(DAYS).map(d=>`<button onclick="setDay('${d}')" class="px-3 py-1.5 rounded-full text-xs font-bold border ${d===day?'bg-indigo-800 text-white border-indigo-800':'bg-white text-stone-600 border-stone-200'}">${d}${d===real?' •':''}</button>`).join('');
+ return `<div class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden"><div class="px-3 pt-3 text-sm font-bold text-indigo-900">🗓 Timetable</div><div class="flex gap-1.5 overflow-x-auto px-3 py-2">${chips}</div>${rows}</div>`;
+}
+function voteHtml(n){
+ const v=n.votes||{},tot=Object.keys(v).length,mine=v[myEn];
+ return '<div class="space-y-1.5 pt-1.5">'+n.opts.map((o,i)=>{const c=Object.values(v).filter(x=>x===i).length,pc=tot?Math.round(c*100/tot):0,on=!admin&&mine===i;
+  return `<button ${admin?'disabled':`onclick="vote('${n.id}',${i})"`} class="relative w-full text-left overflow-hidden rounded-lg border ${on?'border-indigo-600':'border-stone-200'} px-3 py-2 text-xs font-semibold"><span class="absolute inset-y-0 left-0 ${on?'bg-indigo-200':'bg-stone-100'}" style="width:${pc}%"></span><span class="relative flex justify-between gap-2"><span>${on?'✓ ':''}${esc(o)}</span><span>${c} • ${pc}%</span></span></button>`}).join('')
+  +`<p class="text-[10px] text-stone-400">${tot} vote${tot===1?'':'s'}${admin?'':mine===undefined?' • Tap an option to vote':' • You can change your vote'}</p></div>`;
+}
+function noticesHtml(){
+ const T={notice:'📌 Notice',pdf:'📄 PDF / Notes',vote:'🗳️ Class Poll'};
+ const rows=NOTICES.length?NOTICES.map(n=>`<div class="p-3.5 border-t border-stone-100 space-y-1"><div class="flex items-center justify-between gap-2"><span class="text-[10px] font-bold text-indigo-700">${T[n.type]||'📌 Notice'} <span class="text-stone-400 font-normal">• ${new Date(n.t).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}</span></span>${admin?`<button onclick="delNotice('${n.id}')" class="px-2 py-1 rounded-lg text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200">🗑</button>`:''}</div><div class="text-[13px] font-bold">${esc(n.title)}</div>${n.body?`<p class="text-xs text-stone-600">${esc(n.body)}</p>`:''}${n.type==='vote'&&n.opts?voteHtml(n):''}${n.link?`<a href="${esc(n.link)}" target="_blank" rel="noopener" class="inline-block mt-1 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200 text-[11px] font-bold">${n.type==='pdf'?'📥 Open PDF':'Open link'} ↗</a>`:''}</div>`).join(''):'<div class="p-5 text-center text-xs text-stone-400">No notices yet.</div>';
+ return `<div class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden"><div class="px-3 py-2.5 text-sm font-bold text-indigo-900">📢 Notices, PDFs & Polls <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">${NOTICES.length}</span></div>${rows}</div>`;
+}
+function myCardHtml(me){
+ if(!me)return `<div class="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm p-4 space-y-2"><div class="text-[10px] font-bold uppercase text-indigo-600">One-time setup</div><div class="text-base font-bold text-indigo-950">Enter your enrollment number</div><p class="text-xs text-stone-500">Enter it once. It stays saved on this phone. Select your class below first if needed.</p><div class="flex gap-2"><input id="enIn" placeholder="e.g. 0537AL251076 or last 4 digits" onkeydown="if(event.key==='Enter')stuLogin()" class="flex-1 px-3 py-2.5 rounded-xl bg-stone-50 border border-stone-300 text-sm uppercase outline-none focus:border-indigo-600"><button onclick="stuLogin()" class="px-4 py-2.5 rounded-xl bg-indigo-800 text-white text-sm font-bold">Save</button></div></div>`;
+ const view=taken,badge=!view?'<span class="px-3 py-1 rounded-full bg-stone-100 text-stone-500 text-xs font-bold">Not marked yet</span>':me.st==='P'?'<span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">✅ Present</span>':me.st==='A'?'<span class="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-bold">❌ Absent</span>':'<span class="px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-bold">🟡 POD</span>';
+ return `<div class="bg-white rounded-2xl border border-indigo-200 shadow-sm p-4 flex items-start justify-between gap-2"><div class="min-w-0"><div class="text-[10px] font-bold uppercase tracking-wider text-indigo-600">My attendance • Group ${me.g}</div><div class="text-base font-bold capitalize truncate">${esc(me.name.toLowerCase())}</div><div class="text-xs text-stone-500">${esc(me.en)} • Roll #${me.sno}</div><div class="text-[11px] text-stone-500 mt-1">${esc(lecName())} • ${esc($('dt').value)}</div></div><div class="text-right shrink-0 space-y-1">${badge}<button onclick="stuSwitch()" class="block ml-auto text-[10px] font-semibold text-indigo-600 hover:underline">Switch roll no.</button></div></div>`;
+}
+function renderHome(){
+ const el=$('stuBox');if(!el)return;
+ const me=S.find(s=>s.en===myEn);
+ if(el.contains(document.activeElement)&&document.activeElement.id==='enIn')return;
+ el.innerHTML=(admin?'':myCardHtml(me))+(isDef()?ttHtml(admin?null:me):'')+noticesHtml();
+}
+async function postNotice(){
+ if(!admin||!CONFIGURED)return toast('Please log in as admin first');
+ const title=$('nTitle').value.trim(),type=$('nType').value;if(!title)return toast('Enter a title');
+ const n={type,title,body:$('nBody').value.trim(),link:/^https?:\/\//.test($('nLink').value.trim())?$('nLink').value.trim():'',t:Date.now()};
+ if(type==='vote'){n.opts=[...new Set($('nOpts').value.split('\n').map(x=>x.trim()).filter(Boolean))];if(n.opts.length<2)return toast('Add at least 2 poll options');n.votes={}}
+ try{await setDoc(nDoc(String(n.t)),n);['nTitle','nBody','nLink','nOpts'].forEach(i=>$(i).value='');toast('📢 Posted')}catch(e){toast('Post failed: '+(e.code||e.message))}
+}
+async function delNotice(id){if(!admin||!confirm('Delete this notice?'))return;try{await deleteDoc(nDoc(id));toast('Deleted')}catch(e){toast('Delete failed: '+(e.code||e.message))}}
+async function vote(id,i){
+ if(!S.some(s=>s.en===myEn))return toast('Enter your enrollment number first');
+ try{await updateDoc(nDoc(id),{['votes.'+myEn]:i});toast('🗳️ Vote saved')}catch(e){toast('Vote failed: '+(e.code||e.message))}
+}
+
+Object.assign(window,{stuLogin,stuSwitch,setDay,postNotice,delNotice,vote,toggleEveryone,setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,switchClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
 fillClassSel();tabs();filters();chrome();loadRec();initFirebase();
+setInterval(renderHome,60000);
 </script>
 </body>
 </html>
