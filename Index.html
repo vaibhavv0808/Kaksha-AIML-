@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kaksha • Attendance</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,transparent 1px);background-size:18px 18px;color:#292524;font-family:Poppins,system-ui,sans-serif}
+.mono{font-variant-numeric:tabular-nums}
+.hd{font-family:Lora,Georgia,serif}
+.sb{transition:all .12s}.sb:active{transform:scale(.93)}
+.row{user-select:none;-webkit-tap-highlight-color:transparent}
+</style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+<div id="toast" class="fixed bottom-20 right-4 z-50 translate-y-20 opacity-0 transition-all duration-300 pointer-events-none px-3.5 py-2.5 rounded-2xl shadow-lg bg-stone-900 text-white text-xs font-medium"><span id="toastMsg"></span></div>
+
+<header class="sticky top-0 z-30 bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-800 shadow-md">
+<div class="max-w-4xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2 flex-wrap">
+<div><h1 class="hd text-lg sm:text-xl font-bold leading-tight text-white tracking-tight">🎓 Kaksha</h1>
+<p class="text-[11px] text-indigo-200">Attendance • SISTec • <span id="clsName"></span> • <span id="cnt">71</span> students</p></div>
+<div id="hdrBtns" class="flex gap-1.5 flex-wrap"></div>
+</div></header>
+
+<div id="cfgWarn" class="hidden bg-rose-100 text-rose-800 text-xs font-semibold px-3 py-2 text-center">⚠️ Firebase config is not filled in. Running in demo mode (nothing is saved online).</div>
+
+<main class="flex-1 max-w-4xl w-full mx-auto px-2.5 py-3 space-y-3">
+<section class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-3">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+<div class="sm:col-span-3"><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Class</label>
+<select id="cls" class="w-full px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-300 text-sm font-bold text-indigo-900 outline-none focus:border-indigo-600"></select></div>
+<div class="sm:col-span-2"><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Subject / Lecture</label>
+<select id="lec" class="w-full px-3 py-2 rounded-lg bg-stone-50 border border-stone-300 text-sm font-medium outline-none focus:border-indigo-600"></select></div>
+<div><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Date</label>
+<input type="date" id="dt" class="w-full px-3 py-2 rounded-lg bg-stone-50 border border-stone-300 text-sm font-medium outline-none focus:border-indigo-600"></div>
+</div>
+<div class="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between gap-2">
+<div class="inline-flex p-1 rounded-lg bg-stone-100 border border-stone-200 w-full sm:w-auto" id="tabs"></div>
+<div id="bulk" class="hidden gap-1.5 w-full sm:w-auto justify-end">
+<button onclick="markAll('P')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">All P</button>
+<button onclick="markAll('A')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">All A</button>
+</div></div>
+<div id="status" class="text-[11px] font-semibold"></div>
+</section>
+
+<section class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+<div class="sm:col-span-7 grid grid-cols-4 gap-1.5">
+<div class="bg-indigo-50 rounded-lg border border-indigo-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-stone-400 block">Total</span><span id="sT" class="text-lg font-bold text-indigo-800 mono">71</span></div>
+<div class="bg-emerald-50 rounded-lg border border-emerald-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-emerald-600 block">Present</span><span id="sP" class="text-lg font-bold text-emerald-600 mono">71</span></div>
+<div class="bg-rose-50 rounded-lg border border-rose-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-rose-600 block">Absent</span><span id="sA" class="text-lg font-bold text-rose-600 mono">0</span></div>
+<div class="bg-amber-50 rounded-lg border border-amber-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-amber-600 block">POD</span><span id="sD" class="text-lg font-bold text-amber-600 mono">0</span></div>
+</div>
+<input id="q" placeholder="🔍 Search your name or roll no." class="sm:col-span-5 w-full px-3 py-2 rounded-lg bg-white border border-stone-200 text-sm outline-none focus:border-indigo-600">
+</section>
+
+<section class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
+<div class="px-3 py-2 bg-stone-50 border-b border-stone-200 flex items-center justify-between gap-2">
+<span id="badge" class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-100 text-indigo-800"></span>
+<div class="flex gap-1 text-[11px] font-bold" id="filters"></div>
+</div>
+<div id="list" class="divide-y divide-stone-100"></div>
+</section>
+</main>
+
+<div class="sticky bottom-0 z-30 bg-white/95 backdrop-blur border-t border-indigo-100 shadow-[0_-4px_12px_rgba(49,46,129,0.08)] px-3 py-2 flex items-center justify-between sm:hidden">
+<div><span id="mLab" class="text-[11px] font-bold block"></span><span id="mSt" class="text-[11px] text-stone-500"></span></div>
+<div id="botBtns" class="flex gap-1.5"></div>
+</div>
+
+<div id="modal" class="fixed inset-0 z-50 hidden bg-stone-900/60 items-center justify-center p-2.5">
+<div class="bg-white rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+<div class="px-4 py-3 border-b border-stone-200 flex flex-wrap items-center justify-between gap-2">
+<div><h3 class="font-bold text-sm">Attendance Report Image</h3><p id="mSub" class="text-[11px] text-stone-500"></p></div>
+<div class="flex gap-1.5">
+<button onclick="shareImg()" class="px-3 py-1.5 rounded-lg font-semibold text-xs bg-emerald-600 text-white">Share</button>
+<button onclick="dlImg()" class="px-3 py-1.5 rounded-lg font-semibold text-xs bg-indigo-800 text-white">Download</button>
+<button onclick="closeModal()" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600">✕</button>
+</div></div>
+<div class="p-3 overflow-auto flex-1 bg-stone-100"><img id="prev" alt="Attendance" class="max-w-full h-auto rounded-lg border border-stone-300 bg-white mx-auto"><canvas id="cv" class="hidden"></canvas></div>
+<div class="px-4 py-2 border-t border-stone-200 text-[11px] text-stone-500">If Download doesn't start, long-press the image and save it.</div>
+</div></div>
+
+<div id="adm" class="fixed inset-0 z-50 hidden bg-indigo-950/60 items-center justify-center p-3">
+<div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+<div class="px-4 py-3 border-b border-indigo-100 flex items-center justify-between">
+<div><h3 class="font-bold text-sm text-indigo-900">Student Management</h3><p class="text-[11px] text-stone-500">Add or edit students (changes are live for everyone)</p></div>
+<button onclick="closeAdmin()" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600">✕</button>
+</div>
+<div class="p-3 overflow-auto flex-1 space-y-3">
+<div id="admForm" class="hidden rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 space-y-2">
+<p id="admFormTitle" class="text-xs font-bold text-indigo-800"></p>
+<input id="aName" placeholder="Student name" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<input id="aEn" placeholder="Enrollment No." class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<select id="aG" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"><option value="1">Group 1</option><option value="2">Group 2</option></select>
+<div class="flex gap-2 justify-end">
+<button id="delBtn" onclick="delStu()" class="hidden mr-auto px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">🗑 Delete</button>
+<button onclick="cancelForm()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-100 text-stone-700">Cancel</button>
+<button onclick="saveStu()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-700 text-white">Save</button>
+</div></div>
+<button onclick="newStu()" class="w-full py-2 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950 hover:bg-amber-300">+ Add New Student</button>
+<div id="admList" class="divide-y divide-stone-100 border border-stone-200 rounded-xl"></div>
+</div></div></div>
+
+<div id="pinM" class="fixed inset-0 z-[60] hidden bg-indigo-950/60 items-center justify-center p-3">
+<div class="bg-white rounded-2xl max-w-xs w-full shadow-2xl p-5 space-y-3">
+<h3 class="font-bold text-sm text-indigo-900">Admin Login</h3>
+<input id="emIn" type="email" autocomplete="username" placeholder="Admin email" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<input id="pwIn" type="password" autocomplete="current-password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
+<input id="codeIn" autocomplete="off" placeholder="Class code" onkeydown="if(event.key==='Enter')doLogin()" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm uppercase outline-none focus:border-indigo-600">
+<div class="flex gap-2 justify-end">
+<button onclick="closePin()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-100 text-stone-700">Cancel</button>
+<button onclick="doLogin()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-700 text-white">Login</button>
+</div></div></div>
+
+
+<div id="subM" class="fixed inset-0 z-50 hidden bg-indigo-950/60 items-center justify-center p-3">
+<div class="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+<div class="px-4 py-3 border-b border-indigo-100 flex items-center justify-between">
+<div><h3 class="font-bold text-sm text-indigo-900">📚 Subjects</h3><p id="subCls" class="text-[11px] text-stone-500"></p></div>
+<button onclick="closeSub()" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600">✕</button></div>
+<div class="p-3 overflow-auto flex-1 space-y-2">
+<div id="subRows" class="space-y-2"></div><button onclick="subAdd()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">+ Subject</button>
+<p class="text-[10px] text-stone-500">Renaming a subject keeps its old attendance. Removing a subject also keeps its old data in the database.</p>
+<div class="flex gap-2 justify-end"><button onclick="closeSub()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-stone-100 text-stone-700">Cancel</button>
+<button onclick="saveSubs()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-700 text-white">Save</button></div>
+</div></div></div>
+
+<div id="nm" class="fixed inset-0 z-50 hidden bg-indigo-950/60 items-center justify-center p-3">
+<div class="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+<div class="px-4 py-3 border-b border-indigo-100 flex items-center justify-between">
+<div><h3 class="font-bold text-sm text-indigo-900">Copy Names</h3><p class="text-[11px] text-stone-500">Choose a status first</p></div>
+<button onclick="closeNames()" class="w-8 h-8 rounded-lg bg-stone-100 text-stone-600">✕</button>
+</div>
+<div class="p-3 space-y-3 overflow-auto flex-1">
+<div class="grid grid-cols-3 gap-2">
+<button onclick="pickNames('P')" data-k="P" class="nb py-2 rounded-lg text-xs font-bold border border-emerald-300 text-emerald-700 bg-emerald-50">✅ Present</button>
+<button onclick="pickNames('A')" data-k="A" class="nb py-2 rounded-lg text-xs font-bold border border-rose-300 text-rose-700 bg-rose-50">❌ Absent</button>
+<button onclick="pickNames('POD')" data-k="POD" class="nb py-2 rounded-lg text-xs font-bold border border-amber-300 text-amber-700 bg-amber-50">🟡 POD</button>
+</div>
+<div id="nmList" class="rounded-xl border border-stone-200 bg-stone-50 p-3 text-[13px] leading-relaxed min-h-[120px] whitespace-pre-line"></div>
+<button onclick="copyNames()" class="w-full py-2.5 rounded-lg text-sm font-bold bg-indigo-700 text-white hover:bg-indigo-800">📋 Copy All</button>
+</div></div></div>
+<script type="module">
+/* ================= FIREBASE CONFIG ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyA3J1803r11bfKmBfO9S3X6vsM3tewmBSQ",
+  authDomain: "kaksha-6cce6.firebaseapp.com",
+  projectId: "kaksha-6cce6",
+  storageBucket: "kaksha-6cce6.firebasestorage.app",
+  messagingSenderId: "862101273981",
+  appId: "1:862101273981:web:f73fcf302eaf7e31e82014"
+};
+/* =================================================== */
+
+const HAS_CFG=!String(firebaseConfig.apiKey).startsWith('PASTE');
+let CONFIGURED=false;
+let db=null,auth=null,initializeApp,getFirestore,doc,getDoc,setDoc,onSnapshot,getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged;
+const V='https://www.gstatic.com/firebasejs/10.12.2/';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+
+/* ---------- Data model ----------
+ Set-B (AIML Set-B, original): students -> config/students , attendance -> attendance/{date}_{subject}
+ New classes           : classes/{id} {name,lecs,list}  , attendance -> classes/{id}/attendance/{date}_{subject}
+ Class list            : config/classes {list:[{id,name}], defaultLecs:[...]}                              */
+const DEFAULT_ID='default',DEFAULT_NAME='AIML Set-B';
+const BUILTIN_LECS=[
+['AL301','AL301 Technical Communication'],
+['AL302','AL302 Introduction to Probability and Statistics'],
+['AL303','AL303 Data Structures'],
+['AL304','AL304 Artificial Intelligence'],
+['AL305','AL305 Object Oriented Programming and Methodology (OOPM)'],
+['AIML-314','AIML-314 Python Training'],
+['AIML-315','AIML-315 CRT - Aptitude'],
+['AIML-316','AIML-316 CRT - Comm. Skills'],
+['HOD','HOD Lecture']].map(([id,name])=>({id,name}));
+const RAW="NAYAN PATEL:1076|NIKHIL NIKHIL:1077|NIKIL PRAJAPATI:1078|OJASWA MAHOBIYA:1080|OMENDRA SHUKLA:1081|PANKAJ PAWAR:1082|PAVAN SINGH:1083|PAWAN JAISWAL:1084|PAYAL NAGAR:1085|PRACHI NIRMALKAR:1086|PRAGYA SONI:1087|PRAKHAR PRAJAPATI:1088|PRASHANT KUSHWAH:1089|PRASHANT TIWARI:1090|PRATEEK CHOUREY:1091|PRATIKSHA CHAUKASE:1092|PRAVEEN BHAGAT:1093|PREM ANARTHE:1094|PREM VERMA:1095|PRINCE AHIRWAR:1096|PRINCE THAKUR:1097|PRIYANSHOO PATEL:1098|PUSHPENDRA KUSHWAHA:1099|RACHIT MATHUR:1100|RADHIKA YADAV:1101|RAJ DUBEY:1102|RAJ KARMODIYA:1103|RAJ MARAN:1104|RASHID ANSARI:1106|RAVINDRA PAL:1107|RISHABH VERMA:1109|RIYA MEENA:1111|ROHAN VERMA:1112|ROUNAK KUMAR SINGH:1113|RUKMANI KUSHWAH:1114|SAMEER KHAN:1115|SANDEEP KUSHWAHA:1116|SANJAY MEWADA:1117|SANSKAR SAHU:1118|SATYAM LODHI:1120|SAURABH KUMAR:1121|SAYYED YOUSUF ALI:1122|SHIKHA TILAK:1123|SHIVA VERMA:1124|SHIVAM PRAJAPATI:1125|SHIVANI MARAN:1126|SHIVANSH SHRIVASTAVA:1127|SHUBHAM RAJPUT:1128|SIYA NAGAR:1129|SOHAN VERMA:1130|SRISHTI PRAJAPATI:1131|SUJAL BISEN:1132|SUMIT BAGWAN:1133|SUMIT MEWADA:1134|SUMIT VERMA:1135|SUMIT YADAV:1136|SURYANSH JAIN:1137|TANISH KUSHWAHA:1138|UJJWAL SINGH KARN:1139|VAIBHAV VERMA:1140|VAISHNAVI RAI:1141|VANSH CHANDRAVANSHI:1142|VEDANT MAURYA:1143|VEDANT MISHRA:1144|VEDIKA CHOPDE:1145|VIVEK BHAGAT:1146|VIVEK MEHRA:1147|YASH DANGI:1148|YASHWANI DHONDI:1150|YOGESH BANIYA:1151|ZIDAN KHAN:1152";
+const SEEDA="AALIYA NAAZ:0537AL251001|AARTI MEWADA:0537AL251002|ABHISHEK GUPTA:0537AL251003|ABHISHEK TRIVEDI:0537AL251004|ADESH MESHRAM:0537AL251005|ADITYA KUMAR:0537AL251006|AKSHAT JAISWAL:0537AL251007|AMAN AMAN:0537AL251008|AMAN SINGH:0537AL251009|AMIT SHUKLA:0537AL251010|ANAMIKA SONI:0537AL251011|ANANYA BHAGAT:0537AL251012|ANIT PRAJAPATI:0537AL251013|ANKIT YADAV:0537AL251014|ANKUSH BORKAR:0537AL251015|ANURAG VERMA:0537AL251016|ARJU PATEL:0537AL251017|ARYAN PARASHAR:0537AL251019|ARYAN VERMA:0537AL251020|ASTHA ASTHA:0537AL251021|ASTITVA MISHRA:0537AL251022|AVINA AVINA:0537AL251023|AYUSH PANWAR:0537AL251024|AYUSH SHARNAGAT:0537AL251026|BALKRISHNA JAISWAL:0537AL251027|BHANU SONI:0537AL251028|BHUPENDRA SAHU:0537AL251029|CHHAVI PAWAR:0537AL251030|DEEPESH KUMAR:0537AL251031|DHAMAN VERMA:0537AL251033|DHAPPI MARAN:0537AL251034|DIVYANSHU MISHRA:0537AL251035|DURGESH RAMNANI:0537AL251036|GARIMA PARIHAR:0537AL251037|GOLU BUNKAR:0537AL251038|HARISH WARVADE:0537AL251039|HARSHA SAWARKAR:0537AL251041|HARSHITA PATEL:0537AL251042|HIMANSHU RAJ:0537AL251043|ISHA MEWADA:0537AL251044|ISHIKA SHARMA:0537AL251045|JAY PRAJAPATI:0537AL251046|JAY VISHWAKARMA:0537AL251047|JAYA GIRI:0537AL251048|KAJAL VERMA:0537AL251049|KANCHAN GALERIYA:0537AL251050|KANISHK GOUR:0537AL251051|KARAN SINGH:0537AL251052|KARTIKEYA MISHRA:0537AL251053|KESHAV KORI:0537AL251054|KHUSHI RAJPUT:0537AL251055|KHUSHI RATHORE:0537AL251056|KRISHNA KUMAR GUPTA:0537AL251057|KSHITIJ SINGH PARIHAR:0537AL251058|KUMKUM GIRI:0537AL251059|KUSHAGRA KUSHAGRA:0537AL251060|LAXMAN SINGH LODHI:0537AL251061|LUCKY GUPTA:0537AL251062|LUCKY TIWARI:0537AL251063|LUCKY YADAV:0537AL251064|MANAV RAJESHRAO BORSE:0537AL251066|MANISH KUMAR AHIRWAR:0537AL251067|MAYANK MADANKAR:0537AL251068|MAYANK SEN:0537AL251069|MAYURI CHOUDHARY:0537AL251070|MOHAMMAD MUSA UDDIN QURE:0537AL251071|MUSKAN MEWADA:0537AL251072|MUSKAN MISHRA:0537AL251073|NANDINI CHOUDHARY:0537AL251074|NAWAZ KHAN:0537AL251075";
+const seedFor=id=>id===DEFAULT_ID?defaultStudents():SEEDA.split('|').map((x,i)=>{const [n,e]=x.split(':');return{sno:i+1,name:n,en:e,g:i<35?1:2,st:'P'}});
+const defaultStudents=()=>RAW.split('|').map((x,i)=>{const [n,e]=x.split(':');return{sno:i+1,name:n,en:'0537AL25'+e,g:i<35?1:2,st:'P'}});
+
+const SETA_ID='seta';
+const CLASSES=[{id:SETA_ID,name:'AIML Set-A'},{id:DEFAULT_ID,name:DEFAULT_NAME}];
+/* Class codes: type the code at login to choose which class you can edit (same Firebase email/password for both). */
+const CODES={'0537AL70A':'seta','0537AL71B':'default'};
+let loginCls=null;
+const savedCls=()=>{try{return localStorage.getItem('kaksha-mycls')}catch(e){return null}};
+let myCls=null;
+let regDefLecs=null,LECS=BUILTIN_LECS;
+const hashCls=()=>decodeURIComponent(location.hash.replace(/^#/,''));
+let cls=hashCls()||(()=>{try{return localStorage.getItem('kaksha-cls')}catch(e){return null}})()||DEFAULT_ID;
+if(!CLASSES.some(c=>c.id===cls))cls=DEFAULT_ID;
+const isDef=()=>cls===DEFAULT_ID;
+let S=seedFor(cls);
+let mode='full',flt='all',admin=false,dirty=false,taken=false,lastRec={};
+const TG='__tg';let tgRec={},tgExists=false,LD={mode:'none',ov:{},rec:{}};
+
+const stuRef=()=>isDef()?doc(db,'config','students'):doc(db,'classes',cls);
+const attRef=k=>isDef()?doc(db,'attendance',k):doc(db,'classes',cls,'attendance',k);
+const regRef=()=>doc(db,'config','classes');
+const tgRef=dt=>isDef()?doc(db,'tg',dt):doc(db,'classes',cls,'tg',dt);
+const className=()=>(CLASSES.find(c=>c.id===cls)||{name:cls}).name;
+const lecName=()=>$('lec').value===TG?'TG (whole-day attendance)':(LECS.find(l=>l.id===$('lec').value)||{name:'Class Lecture'}).name;
+const lecOpts=()=>`<option value="${TG}">⭐ TG (applies to all lectures)</option>`+LECS.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('');
+const rng=g=>{const a=S.filter(s=>s.g===g).map(s=>s.sno);return a.length?`${Math.min(...a)} - ${Math.max(...a)}`:'–'};
+const label=(m=mode)=>m==='g1'?`Group 1 (${rng(1)})`:m==='g2'?`Group 2 (${rng(2)})`:`Full Class (1 - ${S.length})`;
+const act=()=>mode==='g1'?S.filter(s=>s.g===1):mode==='g2'?S.filter(s=>s.g===2):S;
+const on='bg-indigo-800 text-white shadow',off='text-stone-600';
+
+async function initFirebase(){
+ if(!HAS_CFG){$('cfgWarn').classList.remove('hidden');fallbackDefault();return}
+ try{
+  const [a,f,u]=await Promise.all([import(V+'firebase-app.js'),import(V+'firebase-firestore.js'),import(V+'firebase-auth.js')]);
+  ({initializeApp}=a);({getFirestore,doc,getDoc,setDoc,onSnapshot}=f);({getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=u);
+  const app=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app);CONFIGURED=true;
+  listenRegistry();listenStudents();
+  onAuthStateChanged(auth,u=>{
+   const c=loginCls||savedCls();
+   myCls=u&&Object.values(CODES).includes(c)?c:null;
+   if(u&&!myCls){signOut(auth);return}
+   if(myCls&&myCls!==cls){switchClass(myCls);return}
+   admin=(myCls===cls);chrome();loadRec()});
+ }catch(e){$('cfgWarn').textContent='⚠️ Firebase failed to load (check your internet or open the page from its web link): '+(e.message||e);$('cfgWarn').classList.remove('hidden');fallbackDefault()}
+}
+function fallbackDefault(){if(!isDef()){cls=DEFAULT_ID;S=defaultStudents();setLecs(BUILTIN_LECS);fillClassSel();upd()}}
+
+/* ---------- header / buttons ---------- */
+const hb='px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white/15 text-white hover:bg-white/25';
+function chrome(){
+ if(admin){
+  $('hdrBtns').innerHTML=`<button id="saveBtn" onclick="saveAtt()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950">💾 Save</button>
+  <button onclick="openSub()" class="${hb}">📚 Subjects</button><button onclick="openAdmin()" class="${hb}">👥 Students</button><button onclick="openNames()" class="${hb}">📝 Names</button><button onclick="copyText()" class="${hb}">💬 Copy</button><button onclick="openModal()" class="${hb}">🖼️ Image</button><button onclick="doLogout()" class="${hb}">Logout</button>`;
+  $('botBtns').innerHTML=`<button onclick="saveAtt()" class="saveB px-3.5 py-2 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950">💾 Save</button><button onclick="openModal()" class="px-3 py-2 rounded-lg text-xs font-bold bg-indigo-800 text-white">🖼️</button>`;
+ }else{
+  $('hdrBtns').innerHTML=myCls?`<button onclick="switchClass('${myCls}')" class="${hb}">✏️ My class</button><button onclick="doLogout()" class="${hb}">Logout</button>`:`<button onclick="openPin()" class="${hb}">⚙️ Admin</button>`;
+  $('botBtns').innerHTML='';
+ }
+ $('bulk').classList.toggle('hidden',!admin);$('bulk').classList.toggle('flex',admin);
+ $('q').placeholder=admin?'🔍 Find a student by name or roll no.':'🔍 Search your name or roll no.';
+ saveUi();upd();
+}
+function saveUi(){
+ document.querySelectorAll('#saveBtn,.saveB').forEach(b=>{b.textContent=dirty?'💾 Save*':'💾 Saved';b.style.opacity=dirty?'1':'.7'});
+ const st=$('status');
+ if(!CONFIGURED){st.textContent='';return}
+ const isTG=$('lec').value===TG;
+ const n=isTG||LD.mode!=='v2'?0:Object.keys(LD.ov).length;
+ const rb=admin&&!isTG&&LD.mode!=='none'?' <button onclick="resetTG()" class="ml-1 px-2 py-0.5 rounded border border-stone-300 text-stone-600">↺ Same as TG</button>':'';
+ if(isTG)st.innerHTML=(dirty?'<span class="text-amber-600">● Unsaved changes — press Save. </span>':'')+'<span class="text-amber-700">⭐ TG attendance: what you mark here applies to every lecture automatically'+(tgExists?' (saved)':' (not marked yet)')+'</span>';
+ else st.innerHTML=(dirty?'<span class="text-amber-600">● Unsaved changes — press Save. </span>':'')+(taken?'<span class="text-emerald-600">✔ Attendance is marked'+(LD.mode==='none'?' (from TG)':n?` (✎ ${n} different from TG)`:'')+'</span>':'<span class="text-stone-500">Attendance for this lecture is not marked yet</span>')+rb;
+}
+
+/* ---------- class select ---------- */
+function fillClassSel(){
+ const list=CLASSES.some(c=>c.id===cls)?CLASSES:[...CLASSES,{id:cls,name:cls}];
+ $('cls').innerHTML=list.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+ $('cls').value=cls;$('clsName').textContent=className();
+}
+function setLecs(arr){
+ const old=$('lec').value;LECS=arr;
+ $('lec').innerHTML=lecOpts();
+ if(LECS.some(l=>l.id===old))$('lec').value=old;
+ if($('lec').value!==old)loadRec();
+}
+function switchClass(id){
+ if(id===cls)return;
+ if(admin&&dirty&&!confirm('You have unsaved changes. Switch class anyway?')){$('cls').value=cls;return}
+ cls=id;try{localStorage.setItem('kaksha-cls',id)}catch(e){}
+ history.replaceState(null,'','#'+encodeURIComponent(id));
+ mode='full';flt='all';S=seedFor(cls);lastRec={};taken=false;dirty=false;
+ $('lec').innerHTML='';setLecs(regDefLecs||BUILTIN_LECS);
+ admin=(myCls===cls);fillClassSel();tabs();filters();chrome();listenStudents();loadRec();
+}
+window.addEventListener('hashchange',()=>{const h=hashCls();if(h&&h!==cls)switchClass(h)});
+
+/* ---------- Firestore listeners ---------- */
+function listenRegistry(){
+ onSnapshot(regRef(),d=>{
+  const x=d.exists()?d.data():{};
+  regDefLecs=Array.isArray(x.defaultLecs)&&x.defaultLecs.length?x.defaultLecs:null;
+  setLecs(regDefLecs||BUILTIN_LECS);fillClassSel();upd();
+ },()=>{});
+}
+let unsubStu=null;
+function listenStudents(){
+ if(unsubStu){unsubStu();unsubStu=null}
+ if(!CONFIGURED)return;
+ unsubStu=onSnapshot(stuRef(),d=>{
+  const x=d.exists()?d.data():{};
+  const prev={};S.forEach(s=>prev[s.en]=s.st);
+  if(Array.isArray(x.list)&&x.list.length)S=x.list.map(y=>({sno:y.sno,name:y.name,en:y.en,g:y.g,st:'P'}));
+  else S=seedFor(cls);
+  if(dirty)S.forEach(s=>s.st=prev[s.en]||'P');else calc();
+  upd();if(admin&&!$('adm').classList.contains('hidden'))renderAdm();
+ },()=>{});
+}
+const docKey=()=>`${$('dt').value}_${$('lec').value}`;
+let unsubRec=null,unsubLec=null,prevKey='';
+function calc(){
+ const isTG=$('lec').value===TG;
+ S.forEach(s=>{const b=tgRec[s.en]||'P';
+  s.st=isTG?b:LD.mode==='legacy'?(LD.rec[s.en]||'P'):(LD.ov[s.en]!==undefined?LD.ov[s.en]:b)});
+ taken=isTG?tgExists:(LD.mode!=='none'||tgExists);
+}
+function recompute(){calc();dirty=false;saveUi();upd()}
+async function loadRec(){
+ if(unsubRec){unsubRec();unsubRec=null}if(unsubLec){unsubLec();unsubLec=null}
+ prevKey=docKey();tgRec={};tgExists=false;LD={mode:'none',ov:{},rec:{}};
+ const dt=$('dt').value,isTG=$('lec').value===TG;
+ if(!CONFIGURED||!dt||!$('lec').value){recompute();return}
+ const onT=d=>{tgExists=d.exists();tgRec=tgExists?(d.data().rec||{}):{};recompute()};
+ const onL=d=>{const x=d.exists()?d.data():null;LD=!x?{mode:'none',ov:{},rec:{}}:x.v===2?{mode:'v2',ov:x.ov||{},rec:{}}:{mode:'legacy',ov:{},rec:x.rec||{}};recompute()};
+ const er=e=>toast('Load error: '+(e.code||e.message));
+ if(admin){
+  try{const a=await getDoc(tgRef(dt));tgExists=a.exists();tgRec=tgExists?(a.data().rec||{}):{};
+   if(!isTG){const b=await getDoc(attRef(docKey()));onL(b)}else recompute()}catch(e){er(e)}
+ }else{
+  unsubRec=onSnapshot(tgRef(dt),onT,er);
+  if(!isTG)unsubLec=onSnapshot(attRef(docKey()),onL,er);
+ }
+}
+function onPick(){
+ if(admin&&dirty&&!confirm('You have unsaved changes. Discard them?')){const i=prevKey.indexOf('_');$('dt').value=prevKey.slice(0,i);$('lec').value=prevKey.slice(i+1);return}
+ loadRec()}
+async function saveAtt(){
+ if(!admin||!CONFIGURED)return toast('Please log in as admin first');
+ const dt=$('dt').value,lid=$('lec').value;
+ if(!dt||!lid)return toast('Choose a date and a subject');
+ try{
+  if(lid===TG){
+   const rec={};S.forEach(s=>{if(s.st!=='P')rec[s.en]=s.st});
+   await setDoc(tgRef(dt),{date:dt,cls,rec,updatedAt:Date.now()});tgRec=rec;tgExists=true;
+  }else if(LD.mode==='legacy'){
+   const rec={};S.forEach(s=>{if(s.st!=='P')rec[s.en]=s.st});
+   await setDoc(attRef(docKey()),{date:dt,lec:lid,cls,rec,updatedAt:Date.now()});LD={mode:'legacy',ov:{},rec};
+  }else{
+   const ov={};S.forEach(s=>{if(s.st!==(tgRec[s.en]||'P'))ov[s.en]=s.st});
+   await setDoc(attRef(docKey()),{v:2,date:dt,lec:lid,cls,ov,updatedAt:Date.now()});LD={mode:'v2',ov,rec:{}};
+  }
+  recompute();toast(lid===TG?'✅ TG saved — applied to all lectures':'✅ Saved — everyone can see it now');
+ }catch(e){toast('Save fail: '+(e.code||e.message))}
+}
+function resetTG(){if(!admin||$('lec').value===TG)return;LD={mode:'v2',ov:{},rec:{}};S.forEach(s=>s.st=tgRec[s.en]||'P');dirty=true;saveUi();upd();toast('Reset to TG — press Save')}
+async function persistStudents(){
+ if(!CONFIGURED)return toast('Firebase is not configured');
+ await setDoc(stuRef(),{list:S.map(({sno,name,en,g})=>({sno,name,en,g}))},{merge:true});
+}
+
+/* ---------- tabs / list ---------- */
+function tabs(){$('tabs').innerHTML=[['full',`Full (1-${S.length})`],['g1','Group 1'],['g2','Group 2']].map(([m,t])=>`<button onclick="setMode('${m}')" class="flex-1 sm:flex-initial px-3 py-1.5 rounded-md text-xs font-bold ${m===mode?on:off}">${t}</button>`).join('')}
+function filters(){$('filters').innerHTML=['all','P','A','POD'].map(f=>`<button onclick="setFlt('${f}')" class="px-2 py-1 rounded ${f===flt?'bg-stone-800 text-white':'text-stone-600'}">${f==='all'?'All':f}</button>`).join('')}
+function setMode(m){mode=m;tabs();upd();toast('Switched to '+label())}
+function setFlt(f){flt=f;filters();render()}
+function setSt(n,s){if(!admin)return;const x=S.find(v=>v.sno===n);if(x){x.st=s;dirty=true;saveUi();upd()}}
+function markAll(s){if(!admin)return;const l=act();l.forEach(x=>x.st=s);dirty=true;saveUi();upd();toast(`Marked all ${l.length} as ${s}`)}
+function upd(){const a=act(),c=s=>a.filter(x=>x.st===s).length,show=admin||taken;
+tabs();$('clsName').textContent=className();
+$('cnt').textContent=S.length;$('sT').textContent=a.length;
+$('sP').textContent=show?c('P'):'–';$('sA').textContent=show?c('A'):'–';$('sD').textContent=show?c('POD'):'–';
+$('badge').textContent=label();$('mLab').textContent=className()+' • '+label();$('mSt').textContent=show?`P: ${c('P')} | A: ${c('A')} | POD: ${c('POD')}`:'Attendance pending';render()}
+function render(){const q=$('q').value.trim().toLowerCase();let l=act();
+if(flt!=='all')l=l.filter(s=>s.st===flt);
+if(q)l=l.filter(s=>s.name.toLowerCase().includes(q)||s.en.toLowerCase().includes(q)||String(s.sno)===q);
+if(!l.length){$('list').innerHTML=`<div class="p-6 text-center text-stone-400 text-xs">${S.length?'No students found.':'No students in this class yet.'}</div>`;return}
+const view=admin||taken;const ovOn=$('lec').value!==TG&&LD.mode==='v2'&&view;
+$('list').innerHTML=l.map(s=>{const P=s.st==='P',A=s.st==='A',D=s.st==='POD';
+const bg=view&&A?'bg-rose-50/70':view&&D?'bg-amber-50/70':'bg-white',nc=view&&A?'text-rose-900':view&&D?'text-amber-900':'text-stone-900';
+const b=(on,c)=>on?`${c} text-white`:'bg-white text-stone-500 border-stone-200';
+const bd=!view?'border-stone-200':A?'border-rose-400':D?'border-amber-400':'border-emerald-400';
+const av=!view?'bg-stone-100 text-stone-500':A?'bg-rose-200 text-rose-800':D?'bg-amber-200 text-amber-800':'bg-emerald-100 text-emerald-800';
+const right=admin?`<div class="flex gap-1 shrink-0">
+<button onclick="setSt(${s.sno},'P')" class="sb w-8 h-8 rounded-full text-xs font-bold border ${b(P,'bg-emerald-600 border-emerald-600')}">P</button>
+<button onclick="setSt(${s.sno},'A')" class="sb w-8 h-8 rounded-full text-xs font-bold border ${b(A,'bg-rose-600 border-rose-600')}">A</button>
+<button onclick="setSt(${s.sno},'POD')" class="sb px-2.5 h-8 rounded-full text-[10px] font-bold border ${b(D,'bg-amber-500 border-amber-500')}">POD</button></div>`
+:`<span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold ${!view?'bg-stone-100 text-stone-400':P?'bg-emerald-100 text-emerald-700':A?'bg-rose-600 text-white':'bg-amber-500 text-white'}">${!view?'—':P?'Present':A?'Absent':'POD'}</span>`;
+return `<div class="row border-l-4 ${bd} flex items-center justify-between gap-2 px-3 py-2 ${bg}">
+<div class="flex items-center gap-2 min-w-0 flex-1"><span class="mono text-[11px] font-semibold text-stone-400 w-5 shrink-0 text-right">${s.sno}</span><span class="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${av}">${esc(s.name[0]||'?')}</span>
+<div class="leading-tight min-w-0 break-words"><div class="font-semibold text-[13px] sm:text-sm capitalize ${nc}">${esc(s.name.toLowerCase())}</div><div class="text-[10px] text-stone-400">${esc(s.en)}${ovOn&&s.st!==(tgRec[s.en]||'P')?' <b class="text-amber-600">✎ Different from TG</b>':''}</div></div></div>${right}</div>`}).join('')}
+
+/* ---------- Auth ---------- */
+function openPin(){if(!CONFIGURED)return toast('Firebase has not loaded yet');$('emIn').value='';$('pwIn').value='';$('codeIn').value='';$('pinM').classList.remove('hidden');$('pinM').classList.add('flex');setTimeout(()=>$('emIn').focus(),50)}
+function closePin(){$('pinM').classList.add('hidden');$('pinM').classList.remove('flex')}
+async function doLogin(){
+ const c=CODES[$('codeIn').value.trim().toUpperCase()];
+ if(!c)return toast('Invalid class code');
+ loginCls=c;try{localStorage.setItem('kaksha-mycls',c)}catch(e){}
+ try{await signInWithEmailAndPassword(auth,$('emIn').value.trim(),$('pwIn').value);closePin()}
+ catch(e){loginCls=null;try{localStorage.removeItem('kaksha-mycls')}catch(_){}toast('Login failed: wrong email or password')}
+}
+async function doLogout(){if(dirty&&!confirm('You have unsaved changes. Log out anyway?'))return;loginCls=null;try{localStorage.removeItem('kaksha-mycls')}catch(e){}await signOut(auth)}
+
+/* ---------- Report image ---------- */
+function rr(c,x,y,w,h,r,f,s){c.beginPath();c.roundRect(x,y,w,h,r);if(f){c.fillStyle=f;c.fill()}if(s){c.strokeStyle=s;c.lineWidth=1;c.stroke()}}
+function makeImg(){const cv=$('cv'),c=cv.getContext('2d'),a=act();
+const lec=lecName(),rd=$('dt').value;
+const fd=rd?new Date(rd+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}):'';
+const P=a.filter(s=>s.st==='P'),A=a.filter(s=>s.st==='A'),D=a.filter(s=>s.st==='POD');
+const g1=a.filter(s=>s.g===1),g2=a.filter(s=>s.g===2),h=Math.ceil(a.length/2);
+const split=mode==='full'&&g1.length&&g2.length;
+const L=split?g1:a.slice(0,h),R=split?g2:a.slice(h);
+const W=920,rows=Math.max(L.length,R.length),RH=32,TY=145,H=TY+36+rows*RH+30;
+cv.width=W;cv.height=H;c.fillStyle='#fff';c.fillRect(0,0,W,H);
+c.strokeStyle='#cbd5e1';c.lineWidth=2;c.strokeRect(14,14,W-28,H-28);
+rr(c,24,24,W-48,108,10,'#eef2ff','#c7d2fe');
+c.textAlign='left';c.fillStyle='#3730a3';c.font='bold 13px Poppins,sans-serif';c.fillText(('Kaksha  •  '+className()+'  •  '+label()).toUpperCase(),42,50);
+c.fillStyle='#0f172a';c.font='bold 25px Poppins,sans-serif';c.fillText(lec.length>34?lec.slice(0,33)+'…':lec,42,82);
+c.fillStyle='#475569';c.font='600 14px Poppins,sans-serif';c.fillText('Date: '+fd,42,110);
+const cards=[['TOTAL',a.length,'#f1f5f9','#cbd5e1','#0f172a'],['P (PRESENT)',P.length,'#ecfdf5','#a7f3d0','#059669'],['A (ABSENT)',A.length,'#fef2f2','#fecdd3','#e11d48'],['POD (LEAVE)',D.length,'#fffbeb','#fde68a','#d97706']];
+let cx=W-36-424;
+cards.forEach(k=>{rr(c,cx,36,100,84,8,k[2],k[3]);c.fillStyle=k[4];c.textAlign='center';c.font='bold 11px Poppins,sans-serif';c.fillText(k[0],cx+50,58);c.font='bold 26px Poppins,sans-serif';c.fillText(String(k[1]),cx+50,98);cx+=108});
+c.textAlign='left';
+const cw=(W-62)/2,x1=24,x2=24+cw+14;
+[x1,x2].forEach(x=>{rr(c,x,TY,cw,30,6,'#312e81');c.fillStyle='#fff';c.font='bold 11px Poppins,sans-serif';c.fillText('S.NO',x+12,TY+19);c.fillText('STUDENT NAME (ENROLLMENT NO.)',x+52,TY+19);c.fillText('STATUS',x+cw-57,TY+19)});
+function col(l,sx){l.forEach((s,i)=>{const y=TY+36+i*RH;let f=i%2?'#f8fafc':'#fff',b='#e2e8f0';
+if(s.st==='A'){f='#fef2f2';b='#fecdd3'}else if(s.st==='POD'){f='#fffbeb';b='#fde68a'}
+rr(c,sx,y,cw,RH-3,5,f,b);
+c.fillStyle=s.st==='A'?'#be123c':s.st==='POD'?'#b45309':'#475569';c.font='bold 12px Poppins,sans-serif';c.fillText(String(s.sno).padStart(2,'0')+'.',sx+12,y+19);
+c.fillStyle=s.st==='A'?'#881337':s.st==='POD'?'#78350f':'#0f172a';c.font='bold 12.5px Poppins,sans-serif';c.fillText(s.name,sx+52,y+19);
+const nw=c.measureText(s.name).width;c.fillStyle='#64748b';c.font='500 11.5px Poppins,sans-serif';c.fillText('('+s.en+')',sx+58+nw,y+19);
+const bx=sx+cw-58,by=y+4,m={P:['#dcfce7','#86efac','#15803d','P'],A:['#e11d48','#be123c','#fff','A'],POD:['#f59e0b','#d97706','#fff','POD']}[s.st];
+rr(c,bx,by,48,21,5,m[0],m[1]);c.fillStyle=m[2];c.font='bold 12px Poppins,sans-serif';c.textAlign='center';c.fillText(m[3],bx+24,by+15);c.textAlign='left'})}
+col(L,x1);col(R,x2);
+return cv.toDataURL('image/png')}
+function openModal(){$('prev').src=makeImg();$('mSub').textContent=className()+' • '+label();$('modal').classList.remove('hidden');$('modal').classList.add('flex')}
+function closeModal(){$('modal').classList.add('hidden');$('modal').classList.remove('flex')}
+function dlImg(){const l=(className()+'_'+lecName()).replace(/[^a-zA-Z0-9_-]/g,'_');const a=document.createElement('a');a.download=`Attendance_${l}_${mode}_${$('dt').value}.png`;a.href=$('cv').toDataURL('image/png');a.click();toast('Download requested')}
+function shareImg(){$('cv').toBlob(async b=>{if(!b)return;const f=new File([b],'Attendance_Report.png',{type:'image/png'});
+if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({title:'Attendance',text:className()+' • '+lecName()+' ('+label()+')',files:[f]})}catch(e){}}else dlImg()},'image/png')}
+async function clip(t){try{await navigator.clipboard.writeText(t)}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(_){}document.body.removeChild(ta)}}
+async function copyText(){const a=act(),A=a.filter(s=>s.st==='A'),D=a.filter(s=>s.st==='POD');
+let t=`*ATTENDANCE REPORT*\nClass: *${className()}*\nLecture: *${lecName()}*\nDate: ${$('dt').value}\nGroup: ${label()}\nP: *${a.filter(s=>s.st==='P').length}* | A: *${A.length}* | POD: *${D.length}*\n\n`;
+if(A.length)t+=`*Absent - A (${A.length}):*\n`+A.map(s=>`${s.sno}. ${s.name} (${s.en})`).join('\n')+'\n\n';
+if(D.length)t+=`*On Leave - POD (${D.length}):*\n`+D.map(s=>`${s.sno}. ${s.name} (${s.en})`).join('\n');
+if(!A.length&&!D.length)t+='All students are Present (P)!';
+if(location.protocol.startsWith('http'))t+=`\n\nCheck your attendance here: ${location.origin}${location.pathname}#${encodeURIComponent(cls)}`;
+await clip(t);toast('Copied report text!')}
+let tt;function toast(m){$('toastMsg').textContent=m;const t=$('toast');t.classList.remove('translate-y-20','opacity-0');clearTimeout(tt);tt=setTimeout(()=>t.classList.add('translate-y-20','opacity-0'),2600)}
+
+/* ---------- Names copy ---------- */
+let nmSt='P',nmText='';
+function openNames(){$('nm').classList.remove('hidden');$('nm').classList.add('flex');pickNames(nmSt)}
+function closeNames(){$('nm').classList.add('hidden');$('nm').classList.remove('flex')}
+function pickNames(st){nmSt=st;document.querySelectorAll('.nb').forEach(b=>{b.classList.toggle('ring-2',b.dataset.k===st);b.classList.toggle('ring-indigo-500',b.dataset.k===st)});
+const list=act().filter(x=>x.st===st);nmText=list.map((x,i)=>(i+1)+'. '+x.name).join('\n');
+$('nmList').textContent=list.length?`(${list.length})\n`+nmText:'No students'}
+async function copyNames(){if(!nmText){toast('No names to copy');return}await clip(nmText);toast('Names copied!')}
+
+/* ---------- Student management (current class) ---------- */
+function openAdmin(){$('adm').classList.remove('hidden');$('adm').classList.add('flex');cancelForm();renderAdm()}
+function closeAdmin(){$('adm').classList.add('hidden');$('adm').classList.remove('flex')}
+function renderAdm(){$('admList').innerHTML=[...S].sort((a,b)=>a.sno-b.sno).map(s=>`<div class="flex items-center justify-between gap-2 px-3 py-2">
+<div class="min-w-0"><div class="text-[13px] font-semibold capitalize truncate">${s.sno}. ${esc(s.name.toLowerCase())}</div><div class="text-[10px] text-stone-400">${esc(s.en)} • G${s.g}</div></div>
+<button onclick="editStu(${s.sno})" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">Edit</button></div>`).join('')||'<div class="p-4 text-center text-xs text-stone-400">No students yet. Add one above.</div>'}
+function showForm(title,name,en,g,id){$('admFormTitle').textContent=title+' — '+className();$('aName').value=name;$('aEn').value=en;$('aG').value=String(g);$('admForm').dataset.id=id;$('delBtn').classList.toggle('hidden',!id);$('admForm').classList.remove('hidden');$('aName').focus()}
+function newStu(){showForm('New Student',"","",mode==='g2'?2:1,'')}
+function editStu(sno){const x=S.find(v=>v.sno===sno);if(x)showForm('Edit: '+x.sno+'. '+x.name,x.name,x.en,x.g,String(sno))}
+function cancelForm(){$('admForm').classList.add('hidden')}
+async function saveStu(){const name=$('aName').value.trim().toUpperCase(),en=$('aEn').value.trim().toUpperCase(),g=Number($('aG').value),id=$('admForm').dataset.id;
+if(!name||!en){toast('Enter both name and enrollment');return}
+if(S.some(v=>v.en===en&&String(v.sno)!==id)){toast('This enrollment already exists');return}
+if(id){const x=S.find(v=>v.sno===Number(id));x.name=name;x.en=en;x.g=g}
+else{const sno=Math.max(0,...S.map(v=>v.sno))+1;S.push({sno,name,en,g,st:'P'})}
+try{await persistStudents();toast('Student saved')}catch(e){toast('Save fail: '+(e.code||e.message))}
+cancelForm();renderAdm();upd()}
+async function delStu(){const id=Number($('admForm').dataset.id);const x=S.find(v=>v.sno===id);if(!x)return;
+if(!confirm(`Remove ${x.name} from this class?`))return;
+S=S.filter(v=>v.sno!==id);S.forEach((s,i)=>s.sno=i+1);
+try{await persistStudents();toast('Student removed')}catch(e){toast('Fail: '+(e.code||e.message))}
+cancelForm();renderAdm();upd()}
+
+/* ---------- Subjects ---------- */
+let tmpSubs=[];
+function openSub(){$('subCls').textContent='Shared by AIML Set-A and AIML Set-B';tmpSubs=LECS.map(l=>({...l}));drawSubs();$('subM').classList.remove('hidden');$('subM').classList.add('flex')}
+function closeSub(){$('subM').classList.add('hidden');$('subM').classList.remove('flex')}
+function drawSubs(){$('subRows').innerHTML=tmpSubs.map((s,i)=>`<div class="flex gap-2"><input value="${esc(s.name)}" oninput="subInput(${i},this.value)" placeholder="Subject name" class="flex-1 px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"><button onclick="subDel(${i})" class="px-3 rounded-lg bg-stone-100 text-stone-700">✕</button></div>`).join('')}
+function subAdd(){tmpSubs.push({id:null,name:''});drawSubs()}
+function subDel(i){tmpSubs.splice(i,1);drawSubs()}
+function subInput(i,v){tmpSubs[i].name=v}
+async function saveSubs(){
+ if(!admin||!CONFIGURED)return toast('Please log in as admin first');
+ const used=new Set([...LECS.map(l=>l.id),...tmpSubs.filter(s=>s.id).map(s=>s.id)]);
+ const out=tmpSubs.filter(s=>s.name.trim()).map(s=>{if(s.id)return{id:s.id,name:s.name.trim()};
+  const b=slug(s.name)||'subject';let x=b,j=2;while(used.has(x))x=b+'-'+j++;used.add(x);return{id:x,name:s.name.trim()}});
+ try{
+  await setDoc(regRef(),{defaultLecs:out},{merge:true});
+  setLecs(out);closeSub();toast('Subjects saved');
+ }catch(e){toast('Fail: '+(e.code||e.message))}
+}
+
+/* ---------- init ---------- */
+$('lec').innerHTML=lecOpts();
+$('q').addEventListener('input',render);$('lec').addEventListener('change',onPick);$('dt').addEventListener('change',onPick);
+$('cls').addEventListener('change',e=>switchClass(e.target.value));
+const d=new Date();$('dt').value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+Object.assign(window,{setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,switchClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
+fillClassSel();tabs();filters();chrome();loadRec();initFirebase();
+</script>
+</body>
+</html>
