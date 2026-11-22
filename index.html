@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z'/><path d='M22 10v6'/><path d='M6 12.5V16a6 3 0 0 0 12 0v-3.5'/></svg>">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Kaksha • Attendance</title>
@@ -15,6 +15,71 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 .hd{font-family:Lora,Georgia,serif}
 .sb{transition:all .12s}.sb:active{transform:scale(.93)}
 .row{user-select:none;-webkit-tap-highlight-color:transparent}
+
+/* ---- modern skin ---- */
+html,body{max-width:100vw;overflow-x:hidden}
+body{background:#f4f5fb linear-gradient(180deg,#e8ebff 0,#f4f5fb 280px) no-repeat;color:#1e1b3a;font-family:Poppins,system-ui,sans-serif}
+.hd{font-family:Poppins,system-ui,sans-serif;letter-spacing:-.02em}
+body header.sticky{background:linear-gradient(135deg,#4338ca 0%,#6d28d9 100%);border-radius:0 0 26px 26px;box-shadow:0 14px 30px -16px rgba(67,56,202,.7)}
+body header.sticky .hd{font-size:22px}
+body .rounded-2xl{border-radius:20px}
+body .border-indigo-100,body .border-indigo-200{border-color:#e6e9f8}
+body .shadow-sm{box-shadow:0 1px 2px rgba(30,27,75,.04),0 12px 28px -16px rgba(79,70,229,.32)}
+body :is(select,input,textarea)[class]{border-radius:12px;background-color:#f6f7fd;border-color:#e0e4f4}
+body :is(select,input,textarea)[class]:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.16);background-color:#fff}
+body .bg-indigo-800{background-color:#4f46e5;background-image:linear-gradient(135deg,#4f46e5,#7c3aed)}
+body .bg-amber-400{background-color:#fbbf24;box-shadow:0 6px 14px -6px rgba(245,158,11,.7)}
+body #list .row{border-left-width:3px}
+body label{letter-spacing:.04em}
+
+/* ---- v2 components ---- */
+.ic{width:1.15em;height:1.15em;display:inline-block;vertical-align:-.2em;flex:none}
+.logo{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;color:#fff;font-size:22px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+.cd{background:#fff;border:1px solid #e9ebf8;border-radius:22px;box-shadow:0 1px 2px rgba(30,27,75,.04),0 14px 30px -18px rgba(79,70,229,.35);overflow:hidden}
+.ch{display:flex;align-items:center;gap:10px;padding:14px 16px 10px}.ch b{font-size:14px;font-weight:700;color:#1e1b4b;flex:1}
+.ib{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:#eef0ff;color:#4f46e5;font-size:17px;flex:none}
+.cnt{font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;background:#eef0ff;color:#4f46e5}
+.hero{background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;padding:18px}
+.hero .lb{font-size:10px;font-weight:700;letter-spacing:.12em;opacity:.8}
+.hero .nm{font-size:19px;font-weight:700;text-transform:capitalize;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero .sub{font-size:12px;opacity:.85}
+.hs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.hs div{background:rgba(255,255,255,.14);border-radius:14px;padding:8px 4px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.hs b{display:block;font-size:18px;letter-spacing:0}
+.td{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;background:rgba(255,255,255,.12);border-radius:14px;padding:9px 12px;font-size:12px}
+.td span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bd0,.bd1,.bd2,.bd3{padding:4px 11px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap;flex:none}
+.bd0{background:rgba(255,255,255,.22);color:#fff}.bd1{background:#d1fae5;color:#047857}.bd2{background:#f43f5e;color:#fff}.bd3{background:#f59e0b;color:#fff}
+.sw{background:none;border:0;color:#fff;opacity:.85;font-size:11px;font-weight:600;text-decoration:underline;cursor:pointer;padding:0;margin-top:6px}
+.bp{padding:14px 16px 16px}
+.sr{margin-bottom:11px}.srh{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600}.srh i{font-style:normal;color:#8b8fa8;font-weight:500;font-size:11px}.srh .g{color:#059669}.srh .r{color:#e11d48}
+.bar{height:6px;border-radius:99px;background:#eef0f7;margin-top:5px;overflow:hidden}.bar div{height:100%;border-radius:99px}.bg-g{background:linear-gradient(90deg,#34d399,#10b981)}.bg-r{background:linear-gradient(90deg,#fb7185,#f43f5e)}
+details.rc summary{cursor:pointer;font-size:12px;font-weight:700;color:#4f46e5;list-style:none;margin-top:4px}details.rc summary::-webkit-details-marker{display:none}
+.rr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #f0f1fa;font-size:12px}.rr span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mut{font-size:12px;color:#8b8fa8}
+.nt{padding:13px 16px;border-top:1px solid #f0f1fa}.nh{display:flex;align-items:center;gap:8px}.tg{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.nt-a{background:#eef0ff;color:#4338ca}.nt-b{background:#e0f7fa;color:#0e7490}.nt-c{background:#f5ebff;color:#7e22ce}
+.tm{font-size:11px;color:#8b8fa8;flex:1}.dl{border:1px solid #fecdd3;background:#fff1f2;color:#e11d48;border-radius:10px;padding:4px 8px}
+.tt{font-size:14px;font-weight:700;margin-top:7px;color:#1e1b4b}.nbd{font-size:12.5px;color:#55587a;margin-top:2px;white-space:pre-line}
+.lk{display:inline-flex;align-items:center;gap:4px;margin-top:9px;padding:6px 12px;border-radius:12px;background:#eef0ff;color:#4338ca;font-size:12px;font-weight:700;text-decoration:none}
+.em{padding:24px;text-align:center;font-size:12px;color:#9a9db5}
+.vt{margin-top:9px;display:grid;gap:7px}.vo{position:relative;overflow:hidden;text-align:left;border:1.5px solid #e4e7f5;background:#fafbff;border-radius:14px;padding:10px 12px;font-size:13px;font-weight:600;cursor:pointer;width:100%;color:#1e1b4b}
+.vo.on{border-color:#6366f1;background:#f1f2ff}.vo:disabled{cursor:default}
+.vb{position:absolute;inset:0 auto 0 0;background:#e0e3ff;opacity:.7;transition:width .3s}.vo.on .vb{background:#c7ccff}
+.vr{position:relative;display:flex;align-items:center;gap:9px}.vc{width:19px;height:19px;border-radius:50%;border:1.5px solid #c3c7e6;display:grid;place-items:center;font-size:11px;color:#fff;flex:none}.vo.on .vc{background:#4f46e5;border-color:#4f46e5}.vl{flex:1}.vp{font-size:12px;color:#6b6f93}
+.vn{font-size:11px;color:#9a9db5}
+.dcs{display:flex;gap:6px;overflow-x:auto;padding:2px 16px 12px;scrollbar-width:none}.dcs::-webkit-scrollbar{display:none}
+.dc{flex:none;padding:7px 15px;border-radius:99px;border:1px solid #e4e7f5;background:#fff;font-size:12px;font-weight:700;color:#6b6f93;position:relative;cursor:pointer}
+.dc.on{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border-color:transparent}.dc i{position:absolute;top:5px;right:6px;width:5px;height:5px;border-radius:50%;background:#10b981}
+.slot{display:flex;gap:12px;padding:12px 16px;border-top:1px solid #f0f1fa}.slot.now{background:#ecfdf5;box-shadow:inset 3px 0 #10b981}
+.st{width:54px;flex:none;font-size:11px;color:#8b8fa8;line-height:1.35}.st b{display:block;color:#3b3f66;font-weight:700}
+.sn{font-size:13px;font-weight:700}.sm2{font-size:12px;color:#7a7e9d;margin-top:1px}
+.gp,.nw{font-style:normal;font-size:10px;padding:1px 7px;border-radius:99px;margin-left:6px;font-weight:700}.gp{background:#fef3c7;color:#92400e}.nw{background:#10b981;color:#fff}
+.lunch{text-align:center;font-size:11px;font-weight:700;color:#b45309;background:#fffbeb;padding:8px}
+.pay{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 16px;border-top:1px solid #f0f1fa;font-size:13px}
+.ok1,.no1{flex:none;padding:3px 11px;border-radius:99px;font-size:11px;font-weight:700}.ok1{background:#d1fae5;color:#047857}.no1{background:#fff1f2;color:#e11d48;border:1px solid #fecdd3}
+.lg{padding:20px}.lg h2{margin:0;font-size:16px;font-weight:700;color:#1e1b4b}
+body #everyoneBtn{border:1px solid #e0e4f4;border-width:1px;border-radius:18px;font-weight:700;color:#4338ca;background:#fff;box-shadow:0 12px 26px -18px rgba(79,70,229,.6)}
 </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased">
@@ -22,20 +87,20 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 
 <header class="sticky top-0 z-30 bg-gradient-to-r from-indigo-900 via-indigo-800 to-violet-800 shadow-md">
 <div class="max-w-4xl mx-auto px-3 py-2.5 flex items-center justify-between gap-2 flex-wrap">
-<div><h1 class="hd text-lg sm:text-xl font-bold leading-tight text-white tracking-tight">🎓 Kaksha</h1>
-<p class="text-[11px] text-indigo-200">Attendance • SISTec • <span id="clsName"></span> • <span id="cnt">71</span> students</p></div>
+<div class="flex items-center gap-3 min-w-0"><span class="logo">🎓</span><div class="min-w-0"><h1 class="hd text-lg sm:text-xl font-bold leading-tight text-white tracking-tight">Kaksha</h1>
+<p class="text-[11px] text-indigo-200">Attendance • SISTec • <span id="clsName"></span> • <span id="cnt">71</span> students</p></div></div>
 <div id="hdrBtns" class="flex gap-1.5 flex-wrap"></div>
 </div></header>
 
 <div id="cfgWarn" class="hidden bg-rose-100 text-rose-800 text-xs font-semibold px-3 py-2 text-center">⚠️ Firebase config is not filled in. Running in demo mode (nothing is saved online).</div>
 
-<main class="flex-1 max-w-4xl w-full mx-auto px-2.5 py-3 space-y-3">
+<main class="flex-1 min-w-0 max-w-4xl w-full mx-auto px-2.5 py-3 space-y-3">
 <nav id="admTabs" class="hidden p-1 rounded-xl bg-white border border-indigo-100 shadow-sm gap-1">
 <button data-t="att" onclick="setTab('att')">📋 Attendance</button><button data-t="col" onclick="setTab('col')">💰 Collections</button><button data-t="not" onclick="setTab('not')">📢 Notices</button>
 </nav>
 <section id="crBox" class="hidden bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2">
 <div class="text-sm font-bold text-indigo-900">📢 Post a notice</div>
-<select id="nType" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"><option value="notice">📌 Notice</option><option value="pdf">📄 PDF / Notes (Drive link)</option><option value="vote">🗳️ Poll (students vote here)</option></select>
+<select id="nType" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"><option value="notice">Notice</option><option value="pdf">PDF / Notes (Drive link)</option><option value="vote">Poll (students vote here)</option></select>
 <input id="nTitle" placeholder="Title" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
 <textarea id="nBody" rows="2" placeholder="Details (optional)" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"></textarea>
 <input id="nLink" placeholder="Link (optional, e.g. Google Drive PDF)" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600">
@@ -44,6 +109,8 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 </section>
 <section id="colBox" class="hidden bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2"></section>
 <div id="stuBox" class="space-y-3"></div>
+
+<div id="everyoneWrap" class="space-y-3">
 <section id="selBox" class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2">
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
 <div class="sm:col-span-2"><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Subject / Lecture</label>
@@ -53,8 +120,6 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 </div>
 <div id="status" class="text-[11px] font-semibold"></div>
 </section>
-
-<div id="everyoneWrap" class="space-y-3">
 <section class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-3">
 <div><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Class</label>
 <select id="cls" class="w-full px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-300 text-sm font-bold text-indigo-900 outline-none focus:border-indigo-600"></select></div>
@@ -73,7 +138,7 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 <div class="bg-rose-50 rounded-lg border border-rose-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-rose-600 block">Absent</span><span id="sA" class="text-lg font-bold text-rose-600 mono">0</span></div>
 <div class="bg-amber-50 rounded-lg border border-amber-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-amber-600 block">POD</span><span id="sD" class="text-lg font-bold text-amber-600 mono">0</span></div>
 </div>
-<input id="q" placeholder="🔍 Search your name or roll no." class="sm:col-span-5 w-full px-3 py-2 rounded-lg bg-white border border-stone-200 text-sm outline-none focus:border-indigo-600">
+<input id="q" placeholder="Search your name or roll no." class="sm:col-span-5 w-full px-3 py-2 rounded-lg bg-white border border-stone-200 text-sm outline-none focus:border-indigo-600">
 </section>
 
 <section class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
@@ -227,7 +292,7 @@ const regRef=()=>doc(db,'config','classes');
 const tgRef=dt=>isDef()?doc(db,'tg',dt):doc(db,'classes',cls,'tg',dt);
 const className=()=>(CLASSES.find(c=>c.id===cls)||{name:cls}).name;
 const lecName=()=>$('lec').value===TG?'TG (whole-day attendance)':(LECS.find(l=>l.id===$('lec').value)||{name:'Class Lecture'}).name;
-const lecOpts=()=>`<option value="${TG}">⭐ TG (applies to all lectures)</option>`+LECS.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('');
+const lecOpts=()=>`<option value="${TG}">TG (applies to all lectures)</option>`+LECS.map(l=>`<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('');
 const rng=g=>{const a=S.filter(s=>s.g===g).map(s=>s.sno);return a.length?`${Math.min(...a)} - ${Math.max(...a)}`:'–'};
 const label=(m=mode)=>m==='g1'?`Group 1 (${rng(1)})`:m==='g2'?`Group 2 (${rng(2)})`:`Full Class (1 - ${S.length})`;
 const act=()=>mode==='g1'?S.filter(s=>s.g===1):mode==='g2'?S.filter(s=>s.g===2):S;
@@ -263,7 +328,7 @@ function chrome(){
   $('botBtns').innerHTML='';
  }
  $('bulk').classList.toggle('hidden',!admin);$('bulk').classList.toggle('flex',admin);
- $('q').placeholder=admin?'🔍 Find a student by name or roll no.':'🔍 Search your name or roll no.';
+ $('q').placeholder=admin?'Find a student by name or roll no.':'Search your name or roll no.';
  saveUi();upd();applyView();
 }
 function saveUi(){
@@ -528,7 +593,7 @@ const nDoc=id=>isDef()?doc(db,'notices',id):doc(db,'classes',cls,'notices',id);
 function listenNotices(){
  if(unsubN){unsubN();unsubN=null}NOTICES=[];seenN=false;
  if(!CONFIGURED)return;
- unsubN=onSnapshot(nCol(),sn=>{const first=!seenN;seenN=true;if(!first&&!admin&&window.Notification&&Notification.permission==='granted')sn.docChanges().forEach(c=>{if(c.type==='added'){const n=c.doc.data();try{new Notification('📢 '+(n.title||'New notice'),{body:n.body||className()})}catch(e){}}});NOTICES=sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);renderHome()},()=>{});
+ unsubN=onSnapshot(nCol(),sn=>{const first=!seenN;seenN=true;if(!first&&!admin&&window.Notification&&Notification.permission==='granted')sn.docChanges().forEach(c=>{if(c.type==='added'){const n=c.doc.data();try{new Notification((n.title||'New notice'),{body:n.body||className()})}catch(e){}}});NOTICES=sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);renderHome()},()=>{});
 }
 let admTab='att';
 function setTab(t){admTab=t;applyView();window.scrollTo({top:0})}
@@ -540,7 +605,7 @@ function applyView(){
  sh('selBox',!A||t==='att');sh('everyoneWrap',A?t==='att':everyoneOpen);sh('everyoneBtnWrap',!A);
  sh('admTools',A);$('admTools').classList.toggle('flex',A);
  $('everyoneBtn').textContent=everyoneOpen?"🙈 Hide everyone's attendance":"👥 See everyone's attendance";
- const bb=document.querySelector('.sticky.bottom-0');if(bb)bb.classList.toggle('hidden',A&&t!=='att');
+ const bb=document.querySelector('.sticky.bottom-0');if(bb)bb.classList.toggle('hidden',!A||t!=='att');
 }
 function toggleEveryone(){everyoneOpen=!everyoneOpen;applyView();if(everyoneOpen)setTimeout(()=>$('everyoneWrap').scrollIntoView({behavior:'smooth',block:'start'}),50)}
 function stuLogin(){
@@ -566,34 +631,53 @@ function ttHtml(me){
  const real=DN[new Date().getDay()],day=tday||(real==='Sun'?'Mon':real),g=me?me.g:0;
  const n=new Date(),nm=n.getHours()*60+n.getMinutes();let lunch=false;
  const rows=DAYS[day].filter(r=>!r[5]||!g||r[5]===g).sort((a,b)=>a[0]-b[0]||a[5]-b[5]).map(r=>{
-  let pre='';if(!lunch&&r[0]>=5){pre='<div class="text-center text-[11px] font-bold text-amber-700 bg-amber-50 py-1.5">🍽 Lunch break 1:35 – 2:10</div>';lunch=true}
+  let pre='';if(!lunch&&r[0]>=5){pre='<div class="lunch">🍽 Lunch break • 1:35 – 2:10</div>';lunch=true}
   const a=SLOT[r[0]][0],b=SLOT[r[1]][1],on=day===real&&nm>=a&&nm<b;
-  return pre+`<div class="flex gap-3 px-3 py-2 border-t border-stone-100 ${on?'bg-emerald-100 border-l-4 border-l-emerald-600':''}"><div class="w-16 shrink-0 text-[11px] font-semibold text-stone-400">${fm(a)}<br>${fm(b)}</div><div><div class="text-[13px] font-bold">${esc(r[2])}${r[5]?` <span class="text-[10px] px-1.5 rounded bg-amber-100 text-amber-800">Group ${r[5]}</span>`:''}${on?' <span class="text-[10px] px-1.5 rounded bg-emerald-600 text-white">NOW</span>':''}</div><div class="text-[11px] text-stone-500">${esc(r[3])} • ${esc(r[4])}</div></div></div>`}).join('');
- const chips=Object.keys(DAYS).map(d=>`<button onclick="setDay('${d}')" class="px-3 py-1.5 rounded-full text-xs font-bold border ${d===day?'bg-indigo-800 text-white border-indigo-800':'bg-white text-stone-600 border-stone-200'}">${d}${d===real?' •':''}</button>`).join('');
- return `<div class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden"><div class="px-3 pt-3 text-sm font-bold text-indigo-900">🗓 Timetable</div><div class="flex gap-1.5 overflow-x-auto px-3 py-2">${chips}</div>${rows}</div>`;
+  return pre+`<div class="slot ${on?'now':''}"><div class="st"><b>${fm(a)}</b>${fm(b)}</div><div class="min-w-0"><div class="sn">${esc(r[2])}${r[5]?`<i class="gp">Group ${r[5]}</i>`:''}${on?'<i class="nw">Now</i>':''}</div><div class="sm2">${esc(r[3])} • ${esc(r[4])}</div></div></div>`}).join('');
+ const chips=Object.keys(DAYS).map(d=>`<button onclick="setDay('${d}')" class="dc ${d===day?'on':''}">${d}${d===real?'<i></i>':''}</button>`).join('');
+ return `<div class="cd"><div class="ch"><span class="ib">🗓</span><b>Timetable</b></div><div class="dcs">${chips}</div><div>${rows}</div></div>`;
 }
 function voteHtml(n){
  const v=n.votes||{},tot=Object.keys(v).length,mine=v[myEn];
- return '<div class="space-y-1.5 pt-1.5">'+n.opts.map((o,i)=>{const c=Object.values(v).filter(x=>x===i).length,pc=tot?Math.round(c*100/tot):0,on=!admin&&mine===i;
-  return `<button ${admin?'disabled':`onclick="vote('${n.id}',${i})"`} class="relative w-full text-left overflow-hidden rounded-lg border ${on?'border-indigo-600':'border-stone-200'} px-3 py-2 text-xs font-semibold"><span class="absolute inset-y-0 left-0 ${on?'bg-indigo-200':'bg-stone-100'}" style="width:${pc}%"></span><span class="relative flex justify-between gap-2"><span>${on?'✓ ':''}${esc(o)}</span><span>${c} • ${pc}%</span></span></button>`}).join('')
-  +`<p class="text-[10px] text-stone-400">${tot} vote${tot===1?'':'s'}${admin?'':mine===undefined?' • Tap an option to vote':' • You can change your vote'}</p></div>`;
+ return '<div class="vt">'+n.opts.map((o,i)=>{const c=Object.values(v).filter(x=>x===i).length,pc=tot?Math.round(c*100/tot):0,on=!admin&&mine===i;
+  return `<button ${admin?'disabled':`onclick="vote('${n.id}',${i})"`} class="vo ${on?'on':''}"><span class="vb" style="width:${pc}%"></span><span class="vr"><span class="vc">${on?'✓':''}</span><span class="vl">${esc(o)}</span><span class="vp">${c} • ${pc}%</span></span></button>`}).join('')
+  +`<p class="vn">${tot} vote${tot===1?'':'s'}${admin?'':!myEn?' • Enter your enrollment number to vote':mine===undefined?' • Tap an option to vote':' • Tap another option to change your vote'}</p></div>`;
 }
 function noticesHtml(){
- const T={notice:'📌 Notice',pdf:'📄 PDF / Notes',vote:'🗳️ Class Poll'};
- const rows=NOTICES.length?NOTICES.map(n=>`<div class="p-3.5 border-t border-stone-100 space-y-1"><div class="flex items-center justify-between gap-2"><span class="text-[10px] font-bold text-indigo-700">${T[n.type]||'📌 Notice'} <span class="text-stone-400 font-normal">• ${new Date(n.t).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}</span></span>${admin?`<button onclick="delNotice('${n.id}')" class="px-2 py-1 rounded-lg text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200">🗑</button>`:''}</div><div class="text-[13px] font-bold">${esc(n.title)}</div>${n.body?`<p class="text-xs text-stone-600">${esc(n.body)}</p>`:''}${n.type==='vote'&&n.opts?voteHtml(n):''}${n.link?`<a href="${esc(n.link)}" target="_blank" rel="noopener" class="inline-block mt-1 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200 text-[11px] font-bold">${n.type==='pdf'?'📥 Open PDF':'Open link'} ↗</a>`:''}</div>`).join(''):'<div class="p-5 text-center text-xs text-stone-400">No notices yet.</div>';
- return `<div class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden"><div class="px-3 py-2.5 text-sm font-bold text-indigo-900">📢 Notices, PDFs & Polls <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">${NOTICES.length}</span></div>${rows}</div>`;
+ const T={notice:['📌','Notice','nt-a'],pdf:['📄','PDF / Notes','nt-b'],vote:['🗳️','Class poll','nt-c']};
+ const rows=NOTICES.length?NOTICES.map(n=>{const t=T[n.type]||T.notice;
+  return `<div class="nt"><div class="nh"><span class="tg ${t[2]}">${t[0]} ${t[1]}</span><span class="tm">${new Date(n.t).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})}</span>${admin?`<button onclick="delNotice('${n.id}')" class="dl">🗑</button>`:''}</div><div class="tt">${esc(n.title)}</div>${n.body?`<p class="nbd">${esc(n.body)}</p>`:''}${n.type==='vote'&&n.opts?voteHtml(n):''}${n.link?`<a href="${esc(n.link)}" target="_blank" rel="noopener" class="lk">${n.type==='pdf'?'📥 Open PDF':'Open link'} ↗</a>`:''}</div>`}).join(''):'<div class="em">No announcements yet.</div>';
+ return `<div class="cd"><div class="ch"><span class="ib">📢</span><b>Announcements</b><span class="cnt">${NOTICES.length}</span></div>${rows}</div>`;
 }
-function myCardHtml(me){
- if(!me)return `<div class="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm p-4 space-y-2"><div class="text-[10px] font-bold uppercase text-indigo-600">One-time setup</div><div class="text-base font-bold text-indigo-950">Enter your enrollment number</div><p class="text-xs text-stone-500">Enter it once. Your class is detected automatically and it stays saved on this phone.</p><div class="flex gap-2"><input id="enIn" placeholder="e.g. 0537AL251076" onkeydown="if(event.key==='Enter')stuLogin()" class="flex-1 px-3 py-2.5 rounded-xl bg-stone-50 border border-stone-300 text-sm uppercase outline-none focus:border-indigo-600"><button onclick="stuLogin()" class="px-4 py-2.5 rounded-xl bg-indigo-800 text-white text-sm font-bold">Save</button></div></div>`;
- const view=taken,badge=!view?'<span class="px-3 py-1 rounded-full bg-stone-100 text-stone-500 text-xs font-bold">Not marked yet</span>':me.st==='P'?'<span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">✅ Present</span>':me.st==='A'?'<span class="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-bold">❌ Absent</span>':'<span class="px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-bold">🟡 POD</span>';
- return `<div class="bg-white rounded-2xl border border-indigo-200 shadow-sm p-4 flex items-start justify-between gap-2"><div class="min-w-0"><div class="text-[10px] font-bold uppercase tracking-wider text-indigo-600">My attendance • Group ${me.g}</div><div class="text-base font-bold capitalize truncate">${esc(me.name.toLowerCase())}</div><div class="text-xs text-stone-500">${esc(me.en)} • Roll #${me.sno}</div><div class="text-[11px] text-stone-500 mt-1">${esc(lecName())} • ${esc($('dt').value)}</div></div><div class="text-right shrink-0 space-y-1">${badge}<button onclick="stuSwitch()" class="block ml-auto text-[10px] font-semibold text-indigo-600 hover:underline">Switch roll no.</button></div></div>`;
+function loginHtml(){
+ return `<div class="cd lg"><div class="flex items-center gap-3"><span class="ib">🎓</span><div><h2>Welcome to Kaksha</h2><p class="mut" style="margin:2px 0 0">Enter your enrollment number to see your attendance. Your class is detected automatically and saved on this phone.</p></div></div><div class="flex gap-2" style="margin-top:14px"><input id="enIn" placeholder="e.g. 0537AL251076" onkeydown="if(event.key==='Enter')stuLogin()" class="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-stone-50 border border-stone-300 text-sm uppercase outline-none focus:border-indigo-600"><button onclick="stuLogin()" class="px-5 py-2.5 rounded-xl bg-indigo-800 text-white text-sm font-bold">Continue</button></div></div>`;
+}
+const ring=(p,c)=>{const r=28,L=2*Math.PI*r;return `<svg viewBox="0 0 72 72" width="72" height="72" style="flex:none"><circle cx="36" cy="36" r="${r}" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="8"/><circle cx="36" cy="36" r="${r}" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(L*p/100).toFixed(1)} ${L.toFixed(1)}" transform="rotate(-90 36 36)"/><text x="36" y="41" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">${p}%</text></svg>`};
+function heroHtml(me){
+ const M=MYST&&MYST!=='loading'&&!MYST.err?MYST:null,T=b=>b.p+b.a+b.d,pc=b=>T(b)?Math.round((b.p+b.d)*100/T(b)):0;
+ let rows=[],tot=0,pr=0,P=0,A=0,D=0;
+ if(M){rows=Object.entries(M.by);const lec=rows.filter(([k])=>k!=='__tg');(lec.length?lec:rows).forEach(([,b])=>{tot+=T(b);pr+=b.p+b.d;P+=b.p;A+=b.a;D+=b.d})}
+ const ov=tot?Math.round(pr*100/tot):0;
+ const st=!taken?'<span class="bd0">Not marked yet</span>':me.st==='P'?'<span class="bd1">✅ Present</span>':me.st==='A'?'<span class="bd2">❌ Absent</span>':'<span class="bd3">🟡 POD</span>';
+ const row=([k,b])=>`<div class="sr"><div class="srh"><span>${esc(LN(k))}</span><span><b class="${pc(b)>=75?'g':'r'}">${pc(b)}%</b> <i>${b.p}P ${b.a}A ${b.d}POD</i></span></div><div class="bar"><div class="${pc(b)>=75?'bg-g':'bg-r'}" style="width:${pc(b)}%"></div></div></div>`;
+ const body=!MYST||MYST==='loading'?'<p class="mut">Loading your attendance…</p>':MYST.err?'<p class="mut" style="color:#e11d48">Could not load attendance: '+esc(MYST.err)+'</p>'
+  :(rows.map(row).join('')||'<p class="mut">No attendance has been marked yet.</p>')
+   +(M.rec.length?`<details class="rc"><summary>Recent records ›</summary>${M.rec.map(r=>`<div class="rr"><span>${esc(r.d)} • ${esc(LN(r.n))}</span><span class="${r.st==='P'?'bd1':r.st==='A'?'bd2':'bd3'}">${r.st}</span></div>`).join('')}</details>`:'');
+ return `<div class="cd"><div class="hero"><div class="flex items-center justify-between gap-3"><div class="min-w-0"><div class="lb">MY ATTENDANCE</div><div class="nm">${esc(me.name.toLowerCase())}</div><div class="sub">${esc(me.en)} • Roll ${me.sno} • Group ${me.g}</div><button onclick="stuSwitch()" class="sw">Switch roll no.</button></div>${ring(ov,ov>=75?'#6ee7b7':'#fda4af')}</div>
+ <div class="hs"><div><b>${P}</b>Present</div><div><b>${A}</b>Absent</div><div><b>${D}</b>POD</div></div>
+ <div class="td"><span>${esc(lecName())} • ${esc($('dt').value)}</span>${st}</div></div>
+ <div class="bp"><div class="mut" style="margin-bottom:10px;display:flex;justify-content:space-between"><b style="color:#1e1b4b">Subject-wise</b><span>${tot?pr+' of '+tot+' lectures • POD = present':''}</span></div>${body}<button onclick="loadMyStats(true)" class="mut" style="margin-top:6px;background:none;border:0;padding:0;cursor:pointer">↻ Refresh</button></div></div>`;
+}
+function payHtml(me){
+ if(!me||!COLS.length)return '';
+ return `<div class="cd"><div class="ch"><span class="ib">💰</span><b>My payments</b></div>`+COLS.map(c=>{const ok=(c.paid||{})[me.en];return `<div class="pay"><span class="truncate">${esc(c.title)}${c.amount?' • ₹'+c.amount:''}</span><span class="${ok?'ok1':'no1'}">${ok?'✔ Paid':'Unpaid'}</span></div>`}).join('')+'</div>';
 }
 function renderHome(){
  const el=$('stuBox');if(!el)return;
  const me=S.find(s=>s.en===myEn);
  if(el.contains(document.activeElement)&&document.activeElement.id==='enIn')return;
  if(me&&!admin)loadMyStats();
- el.innerHTML=(admin?'':myCardHtml(me)+myExtraHtml(me))+(!admin&&isDef()?ttHtml(me):'')+noticesHtml();
+ el.innerHTML=(admin?'':(me?heroHtml(me):loginHtml()))+noticesHtml()+(admin?'':payHtml(me)+(isDef()?ttHtml(me):''));
 }
 async function postNotice(){
  if(!admin||!CONFIGURED)return toast('Please log in as admin first');
@@ -604,8 +688,14 @@ async function postNotice(){
 }
 async function delNotice(id){if(!admin||!confirm('Delete this notice?'))return;try{await deleteDoc(nDoc(id));toast('Deleted')}catch(e){toast('Delete failed: '+(e.code||e.message))}}
 async function vote(id,i){
- if(!S.some(s=>s.en===myEn))return toast('Enter your enrollment number first');
- try{await updateDoc(nDoc(id),{['votes.'+myEn]:i});toast('🗳️ Vote saved')}catch(e){toast('Vote failed: '+(e.code||e.message))}
+ if(admin)return;
+ if(!myEn)return toast('Enter your enrollment number first');
+ if(!CONFIGURED)return toast('Not connected to the database');
+ const n=NOTICES.find(x=>x.id===id);if(!n)return;
+ const prev=n.votes||{},old=prev[myEn];n.votes={...prev,[myEn]:i};renderHome();
+ try{await updateDoc(nDoc(id),{['votes.'+myEn]:i});toast('Vote saved')}
+ catch(e){const r={...prev};if(old===undefined)delete r[myEn];else r[myEn]=old;n.votes=r;renderHome();
+  toast(e.code==='permission-denied'?'Voting is blocked by the database rules. The admin must publish the updated rules once.':'Vote failed: '+(e.code||e.message))}
 }
 
 /* ================= Collections (payments) + Excel ================= */
@@ -628,7 +718,7 @@ function renderCol(){
  const chips=COLS.map(c=>`<button onclick="pickCol('${c.id}')" class="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border ${c.id===curCol?'bg-indigo-800 text-white border-indigo-800':'bg-white text-stone-600 border-stone-200'}">${esc(c.title)}${c.amount?' • ₹'+c.amount:''}</button>`).join('');
  el.innerHTML=`<div class="text-sm font-bold text-indigo-900">💰 Collections • ${esc(className())}</div>
  <div class="flex gap-2"><input id="cTitle" placeholder="New collection (e.g. Trip fee)" class="flex-1 min-w-0 ${inp}"><input id="cAmt" type="number" inputmode="numeric" placeholder="₹ each" class="w-24 ${inp}"><button onclick="addCol()" class="px-3 rounded-lg bg-indigo-800 text-white text-xs font-bold">+ Add</button></div>`
- +(COLS.length?`<div class="flex gap-1.5 overflow-x-auto py-1">${chips}</div><div id="colMeta"></div><input value="${esc(colQ)}" oninput="colSearch(this.value)" placeholder="🔍 Search student" class="w-full ${inp}"><div id="colList" class="divide-y divide-stone-100 border border-stone-200 rounded-xl max-h-[60vh] overflow-auto"></div>`:'<p class="text-xs text-stone-400">No collections yet. Create one above (e.g. Trip fee, T-shirt, Fine).</p>');
+ +(COLS.length?`<div class="flex gap-1.5 overflow-x-auto py-1">${chips}</div><div id="colMeta"></div><input value="${esc(colQ)}" oninput="colSearch(this.value)" placeholder="Search student" class="w-full ${inp}"><div id="colList" class="divide-y divide-stone-100 border border-stone-200 rounded-xl max-h-[60vh] overflow-auto"></div>`:'<p class="text-xs text-stone-400">No collections yet. Create one above (e.g. Trip fee, T-shirt, Fine).</p>');
  renderColList();
 }
 function renderColList(){
@@ -687,29 +777,60 @@ async function loadMyStats(force){
 const LN=id=>id==='__tg'?'TG (whole day)':(LECS.find(l=>l.id===id)||{name:id}).name;
 const bx=h=>`<div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3.5">${h}</div>`;
 const SB={P:'bg-emerald-100 text-emerald-700',A:'bg-rose-600 text-white',POD:'bg-amber-500 text-white'};
-function statsHtml(){
- if(!MYST||MYST==='loading')return bx('<p class="text-xs text-stone-500">Loading your attendance…</p>');
- if(MYST.err)return bx('<p class="text-xs text-rose-600">Could not load attendance: '+esc(MYST.err)+'</p>');
- const rows=Object.entries(MYST.by),lec=rows.filter(([k])=>k!=='__tg'),src=lec.length?lec:rows;
- const T=b=>b.p+b.a+b.d,pc=b=>T(b)?Math.round((b.p+b.d)*100/T(b)):0;
- const tot=src.reduce((s,[,b])=>s+T(b),0),pr=src.reduce((s,[,b])=>s+b.p+b.d,0),ov=tot?Math.round(pr*100/tot):0;
- const row=([k,b])=>`<div><div class="flex justify-between text-[12px]"><span class="font-semibold truncate pr-2">${esc(LN(k))}</span><span class="shrink-0 text-stone-500">${b.p}P ${b.a}A ${b.d}POD • <b class="${pc(b)>=75?'text-emerald-700':'text-rose-600'}">${pc(b)}%</b></span></div><div class="h-1.5 rounded bg-stone-100 mt-0.5"><div class="h-1.5 rounded ${pc(b)>=75?'bg-emerald-500':'bg-rose-500'}" style="width:${pc(b)}%"></div></div></div>`;
- return bx(`<div class="flex items-center justify-between"><div class="text-sm font-bold text-indigo-900">📊 My overall attendance</div><button onclick="loadMyStats(true)" class="text-[10px] font-semibold text-indigo-600">↻ Refresh</button></div>
- <div class="flex items-end gap-2 my-1"><span class="text-3xl font-bold ${ov>=75?'text-emerald-600':'text-rose-600'}">${tot?ov+'%':'–'}</span><span class="text-[11px] text-stone-500 pb-1">${pr} of ${tot} lectures • POD counted as present</span></div>
- <div class="space-y-2 mt-2">${rows.map(row).join('')||'<p class="text-xs text-stone-400">No attendance has been marked yet.</p>'}</div>
- ${MYST.rec.length?`<div class="mt-3 text-[11px] font-bold text-stone-500 uppercase">Recent</div><div class="divide-y divide-stone-100">${MYST.rec.map(r=>`<div class="flex justify-between items-center py-1.5 text-[12px]"><span class="truncate pr-2">${esc(r.d)} • ${esc(LN(r.n))}</span><span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${SB[r.st]}">${r.st}</span></div>`).join('')}</div>`:''}`);
-}
-function myExtraHtml(me){
- if(!me)return '';
- const pay=COLS.length?bx(`<div class="text-sm font-bold text-indigo-900 mb-1">💰 My payments</div>`+COLS.map(c=>{const ok=(c.paid||{})[me.en];return `<div class="flex justify-between items-center py-1.5 text-[13px] border-t border-stone-100"><span class="truncate pr-2">${esc(c.title)}${c.amount?' • ₹'+c.amount:''}</span><span class="shrink-0 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${ok?'bg-emerald-100 text-emerald-700':'bg-rose-50 text-rose-700 border border-rose-300'}">${ok?'✔ Paid':'Unpaid'}</span></div>`}).join('')):'';
- return statsHtml()+pay;
-}
 const alertBtn=()=>('Notification' in window&&Notification.permission==='default'&&!admin)?`<button onclick="enableAlerts()" class="${hb}">🔔 Alerts</button>`:'';
 async function enableAlerts(){try{const p=await Notification.requestPermission();toast(p==='granted'?'Alerts on: you get a pop-up for new notices while this page is open':'Alerts blocked in browser settings');chrome()}catch(e){}}
 setInterval(()=>loadMyStats(true),300000);
+
+/* ================= SVG icons (Lucide style) – emoji are swapped for icons automatically ================= */
+const IC={
+'graduation-cap':'<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
+alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
+wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+megaphone:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+pin:'<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>',
+file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+vote:'<path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7z"/><path d="M22 19H2"/>',
+search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+trash:'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+book:'<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+ok:'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+no:'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+image:'<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>',
+pencil:'<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>',
+list:'<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
+msg:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+undo:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+eyeoff:'<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>',
+utensils:'<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+calendar:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+check:'<path d="M20 6 9 17l-5-5"/>',
+download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+arrow:'<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+chart:'<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+save:'<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>'};
+const ic=(n,c='')=>`<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
+const EMO={'🎓':'graduation-cap','⚠':'alert','📋':'clipboard','💰':'wallet','📢':'megaphone','📌':'pin','📄':'file','🗳':'vote','🔍':'search','✕':'x','🗑':'trash','📚':'book','✅':'ok','❌':'no','🟡':'clock','⭐':'star','👥':'users','🖼':'image','✎':'pencil','📝':'list','💬':'msg','✏':'pencil','⚙':'shield','↺':'undo','🙈':'eyeoff','🍽':'utensils','🗓':'calendar','✓':'check','✔':'check','📥':'download','↗':'arrow','⬇':'download','📊':'chart','↻':'refresh','🔔':'bell','💾':'save'};
+const EMRE=new RegExp('('+Object.keys(EMO).join('|')+')\ufe0f?','g'),EMT=new RegExp('('+Object.keys(EMO).join('|')+')');
+function iconify(root){
+ if(!root||!root.nodeType)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),hit=[];
+ while(w.nextNode()){const t=w.currentNode;if(t.nodeValue&&EMT.test(t.nodeValue)&&!/^(SCRIPT|STYLE|TEXTAREA|OPTION|TITLE)$/.test(t.parentNode.nodeName))hit.push(t)}
+ hit.forEach(t=>{const f=document.createDocumentFragment(),s=t.nodeValue;let last=0,m;EMRE.lastIndex=0;
+  while((m=EMRE.exec(s))){f.append(s.slice(last,m.index));const b=document.createElement('span');b.innerHTML=ic(EMO[m[1]]);f.append(b.firstChild);last=m.index+m[0].length}
+  f.append(s.slice(last));t.replaceWith(f)})}
+
 Object.assign(window,{setTab,pickCol,colSearch,addCol,togglePaid,delCol,xlsCol,loadMyStats,enableAlerts,stuLogin,stuSwitch,setDay,postNotice,delNotice,vote,toggleEveryone,setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,switchClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
 if(myEn&&!S.some(s=>s.en===myEn)&&!hashCls()){const c=CLASSES.find(c=>seedFor(c.id).some(s=>s.en===myEn));if(c)switchClass(c.id)}
 fillClassSel();tabs();filters();chrome();loadRec();initFirebase();
+iconify(document.body);
+new MutationObserver(ms=>{ms.forEach(m=>{m.addedNodes.forEach(a=>{if(a.nodeType===1)iconify(a);else if(a.nodeType===3&&a.parentNode)iconify(a.parentNode)})})}).observe(document.body,{childList:true,subtree:true});
 setInterval(renderHome,60000);
 </script>
 </body>
