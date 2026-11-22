@@ -30,7 +30,9 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 <div id="cfgWarn" class="hidden bg-rose-100 text-rose-800 text-xs font-semibold px-3 py-2 text-center">⚠️ Firebase config is not filled in. Running in demo mode (nothing is saved online).</div>
 
 <main class="flex-1 max-w-4xl w-full mx-auto px-2.5 py-3 space-y-3">
-<div id="stuBox" class="space-y-3"></div>
+<nav id="admTabs" class="hidden p-1 rounded-xl bg-white border border-indigo-100 shadow-sm gap-1">
+<button data-t="att" onclick="setTab('att')">📋 Attendance</button><button data-t="col" onclick="setTab('col')">💰 Collections</button><button data-t="not" onclick="setTab('not')">📢 Notices</button>
+</nav>
 <section id="crBox" class="hidden bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2">
 <div class="text-sm font-bold text-indigo-900">📢 Post a notice</div>
 <select id="nType" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"><option value="notice">📌 Notice</option><option value="pdf">📄 PDF / Notes (Drive link)</option><option value="vote">🗳️ Poll (students vote here)</option></select>
@@ -40,25 +42,30 @@ body{background-color:#fbf6ec;background-image:radial-gradient(#e7dcc3 1px,trans
 <textarea id="nOpts" rows="2" placeholder="Poll options, one per line (polls only)" class="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600"></textarea>
 <button onclick="postNotice()" class="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-800 text-white">Post</button>
 </section>
-<section class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-3">
+<section id="colBox" class="hidden bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2"></section>
+<div id="stuBox" class="space-y-3"></div>
+<section id="selBox" class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2">
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-<div class="sm:col-span-3"><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Class</label>
-<select id="cls" class="w-full px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-300 text-sm font-bold text-indigo-900 outline-none focus:border-indigo-600"></select></div>
 <div class="sm:col-span-2"><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Subject / Lecture</label>
 <select id="lec" class="w-full px-3 py-2 rounded-lg bg-stone-50 border border-stone-300 text-sm font-medium outline-none focus:border-indigo-600"></select></div>
 <div><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Date</label>
 <input type="date" id="dt" class="w-full px-3 py-2 rounded-lg bg-stone-50 border border-stone-300 text-sm font-medium outline-none focus:border-indigo-600"></div>
 </div>
-<div class="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between gap-2">
+<div id="status" class="text-[11px] font-semibold"></div>
+</section>
+
+<div id="everyoneWrap" class="space-y-3">
+<section class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-3">
+<div><label class="block text-[11px] font-bold text-stone-500 uppercase mb-1">Class</label>
+<select id="cls" class="w-full px-3 py-2 rounded-lg bg-indigo-50 border border-indigo-300 text-sm font-bold text-indigo-900 outline-none focus:border-indigo-600"></select></div>
+<div class="flex flex-wrap items-center justify-between gap-2">
 <div class="inline-flex p-1 rounded-lg bg-stone-100 border border-stone-200 w-full sm:w-auto" id="tabs"></div>
 <div id="bulk" class="hidden gap-1.5 w-full sm:w-auto justify-end">
 <button onclick="markAll('P')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">All P</button>
 <button onclick="markAll('A')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">All A</button>
 </div></div>
-<div id="status" class="text-[11px] font-semibold"></div>
+<div id="admTools" class="hidden flex-wrap gap-1.5 pt-3 border-t border-stone-100"></div>
 </section>
-
-<div id="everyoneWrap" class="space-y-3">
 <section class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
 <div class="sm:col-span-7 grid grid-cols-4 gap-1.5">
 <div class="bg-indigo-50 rounded-lg border border-indigo-200 py-2 text-center"><span class="text-[10px] font-bold uppercase text-stone-400 block">Total</span><span id="sT" class="text-lg font-bold text-indigo-800 mono">71</span></div>
@@ -172,7 +179,7 @@ const firebaseConfig = {
 
 const HAS_CFG=!String(firebaseConfig.apiKey).startsWith('PASTE');
 let CONFIGURED=false;
-let db=null,auth=null,initializeApp,getFirestore,doc,getDoc,setDoc,onSnapshot,collection,updateDoc,deleteDoc,getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged;
+let db=null,auth=null,initializeApp,getFirestore,doc,getDoc,setDoc,onSnapshot,collection,updateDoc,deleteDoc,getDocs,getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged;
 const V='https://www.gstatic.com/firebasejs/10.12.2/';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -230,7 +237,7 @@ async function initFirebase(){
  if(!HAS_CFG){$('cfgWarn').classList.remove('hidden');fallbackDefault();return}
  try{
   const [a,f,u]=await Promise.all([import(V+'firebase-app.js'),import(V+'firebase-firestore.js'),import(V+'firebase-auth.js')]);
-  ({initializeApp}=a);({getFirestore,doc,getDoc,setDoc,onSnapshot,collection,updateDoc,deleteDoc}=f);({getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=u);
+  ({initializeApp}=a);({getFirestore,doc,getDoc,setDoc,onSnapshot,collection,updateDoc,deleteDoc,getDocs}=f);({getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=u);
   const app=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app);CONFIGURED=true;
   listenRegistry();listenStudents();
   onAuthStateChanged(auth,u=>{
@@ -247,11 +254,12 @@ function fallbackDefault(){if(!isDef()){cls=DEFAULT_ID;S=defaultStudents();setLe
 const hb='px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white/15 text-white hover:bg-white/25';
 function chrome(){
  if(admin){
-  $('hdrBtns').innerHTML=`<button id="saveBtn" onclick="saveAtt()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950">💾 Save</button>
-  <button onclick="openSub()" class="${hb}">📚 Subjects</button><button onclick="openAdmin()" class="${hb}">👥 Students</button><button onclick="openNames()" class="${hb}">📝 Names</button><button onclick="copyText()" class="${hb}">💬 Copy</button><button onclick="openModal()" class="${hb}">🖼️ Image</button><button onclick="doLogout()" class="${hb}">Logout</button>`;
+  $('hdrBtns').innerHTML=`<button id="saveBtn" onclick="saveAtt()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950">💾 Save</button><button onclick="doLogout()" class="${hb}">Logout</button>`;
+  const tb='px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100';
+  $('admTools').innerHTML=`<button onclick="openSub()" class="${tb}">📚 Subjects</button><button onclick="openAdmin()" class="${tb}">👥 Students</button><button onclick="openNames()" class="${tb}">📝 Names</button><button onclick="copyText()" class="${tb}">💬 Copy report</button><button onclick="openModal()" class="${tb}">🖼️ Image</button>`;
   $('botBtns').innerHTML=`<button onclick="saveAtt()" class="saveB px-3.5 py-2 rounded-lg text-xs font-bold bg-amber-400 text-indigo-950">💾 Save</button><button onclick="openModal()" class="px-3 py-2 rounded-lg text-xs font-bold bg-indigo-800 text-white">🖼️</button>`;
  }else{
-  $('hdrBtns').innerHTML=myCls?`<button onclick="switchClass('${myCls}')" class="${hb}">✏️ My class</button><button onclick="doLogout()" class="${hb}">Logout</button>`:`<button onclick="openPin()" class="${hb}">⚙️ Admin</button>`;
+  $('hdrBtns').innerHTML=alertBtn()+(myCls?`<button onclick="switchClass('${myCls}')" class="${hb}">✏️ My class</button><button onclick="doLogout()" class="${hb}">Logout</button>`:`<button onclick="openPin()" class="${hb}">⚙️ Admin</button>`);
   $('botBtns').innerHTML='';
  }
  $('bulk').classList.toggle('hidden',!admin);$('bulk').classList.toggle('flex',admin);
@@ -301,7 +309,7 @@ function listenRegistry(){
  },()=>{});
 }
 let unsubStu=null;
-function listenStudents(){listenNotices();
+function listenStudents(){listenNotices();listenCols();
  if(unsubStu){unsubStu();unsubStu=null}
  if(!CONFIGURED)return;
  unsubStu=onSnapshot(stuRef(),d=>{
@@ -514,25 +522,32 @@ const d=new Date();$('dt').value=`${d.getFullYear()}-${String(d.getMonth()+1).pa
 
 /* ================= Student home: login, my status, timetable, notices & polls ================= */
 const ls={g:k=>{try{return localStorage.getItem(k)}catch(e){return null}},s:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},d:k=>{try{localStorage.removeItem(k)}catch(e){}}};
-let myEn=ls.g('kaksha-en'),everyoneOpen=false,NOTICES=[],unsubN=null,tday=null;
+let myEn=ls.g('kaksha-en'),everyoneOpen=false,NOTICES=[],unsubN=null,tday=null,seenN=false;
 const nCol=()=>isDef()?collection(db,'notices'):collection(db,'classes',cls,'notices');
 const nDoc=id=>isDef()?doc(db,'notices',id):doc(db,'classes',cls,'notices',id);
 function listenNotices(){
- if(unsubN){unsubN();unsubN=null}NOTICES=[];
+ if(unsubN){unsubN();unsubN=null}NOTICES=[];seenN=false;
  if(!CONFIGURED)return;
- unsubN=onSnapshot(nCol(),sn=>{NOTICES=sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);renderHome()},()=>{});
+ unsubN=onSnapshot(nCol(),sn=>{const first=!seenN;seenN=true;if(!first&&!admin&&window.Notification&&Notification.permission==='granted')sn.docChanges().forEach(c=>{if(c.type==='added'){const n=c.doc.data();try{new Notification('📢 '+(n.title||'New notice'),{body:n.body||className()})}catch(e){}}});NOTICES=sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.t-a.t);renderHome()},()=>{});
 }
+let admTab='att';
+function setTab(t){admTab=t;applyView();window.scrollTo({top:0})}
 function applyView(){
- $('everyoneWrap').classList.toggle('hidden',!admin&&!everyoneOpen);
- $('everyoneBtnWrap').classList.toggle('hidden',admin);
+ const A=admin,t=admTab,sh=(id,on)=>$(id).classList.toggle('hidden',!on);
+ sh('admTabs',A);$('admTabs').classList.toggle('flex',A);
+ document.querySelectorAll('#admTabs button').forEach(b=>b.className='flex-1 py-2 rounded-lg text-xs font-bold '+(b.dataset.t===t?'bg-indigo-800 text-white shadow':'text-stone-600'));
+ sh('crBox',A&&t==='not');sh('colBox',A&&t==='col');sh('stuBox',!A||t==='not');
+ sh('selBox',!A||t==='att');sh('everyoneWrap',A?t==='att':everyoneOpen);sh('everyoneBtnWrap',!A);
+ sh('admTools',A);$('admTools').classList.toggle('flex',A);
  $('everyoneBtn').textContent=everyoneOpen?"🙈 Hide everyone's attendance":"👥 See everyone's attendance";
- $('crBox').classList.toggle('hidden',!admin);
+ const bb=document.querySelector('.sticky.bottom-0');if(bb)bb.classList.toggle('hidden',A&&t!=='att');
 }
 function toggleEveryone(){everyoneOpen=!everyoneOpen;applyView();if(everyoneOpen)setTimeout(()=>$('everyoneWrap').scrollIntoView({behavior:'smooth',block:'start'}),50)}
 function stuLogin(){
  const v=($('enIn').value||'').trim().toUpperCase();if(!v)return;
- const m=S.find(s=>s.en===v)||(v.length===4?S.find(s=>s.en.endsWith(v)):null);
- if(!m)return toast('Not found in '+className()+'. Check the class above.');
+ let m=S.find(s=>s.en===v)||(v.length===4?S.find(s=>s.en.endsWith(v)):null);
+ if(!m){const c=CLASSES.find(c=>c.id!==cls&&seedFor(c.id).some(s=>s.en===v));if(c){switchClass(c.id);m=S.find(s=>s.en===v)}}
+ if(!m)return toast('Enrollment number not found. Please check it.');
  myEn=m.en;ls.s('kaksha-en',myEn);renderHome();toast('Welcome '+m.name.toLowerCase());
 }
 function stuSwitch(){myEn=null;ls.d('kaksha-en');renderHome()}
@@ -569,7 +584,7 @@ function noticesHtml(){
  return `<div class="bg-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden"><div class="px-3 py-2.5 text-sm font-bold text-indigo-900">📢 Notices, PDFs & Polls <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">${NOTICES.length}</span></div>${rows}</div>`;
 }
 function myCardHtml(me){
- if(!me)return `<div class="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm p-4 space-y-2"><div class="text-[10px] font-bold uppercase text-indigo-600">One-time setup</div><div class="text-base font-bold text-indigo-950">Enter your enrollment number</div><p class="text-xs text-stone-500">Enter it once. It stays saved on this phone. Select your class below first if needed.</p><div class="flex gap-2"><input id="enIn" placeholder="e.g. 0537AL251076 or last 4 digits" onkeydown="if(event.key==='Enter')stuLogin()" class="flex-1 px-3 py-2.5 rounded-xl bg-stone-50 border border-stone-300 text-sm uppercase outline-none focus:border-indigo-600"><button onclick="stuLogin()" class="px-4 py-2.5 rounded-xl bg-indigo-800 text-white text-sm font-bold">Save</button></div></div>`;
+ if(!me)return `<div class="bg-white rounded-2xl border-2 border-indigo-200 shadow-sm p-4 space-y-2"><div class="text-[10px] font-bold uppercase text-indigo-600">One-time setup</div><div class="text-base font-bold text-indigo-950">Enter your enrollment number</div><p class="text-xs text-stone-500">Enter it once. Your class is detected automatically and it stays saved on this phone.</p><div class="flex gap-2"><input id="enIn" placeholder="e.g. 0537AL251076" onkeydown="if(event.key==='Enter')stuLogin()" class="flex-1 px-3 py-2.5 rounded-xl bg-stone-50 border border-stone-300 text-sm uppercase outline-none focus:border-indigo-600"><button onclick="stuLogin()" class="px-4 py-2.5 rounded-xl bg-indigo-800 text-white text-sm font-bold">Save</button></div></div>`;
  const view=taken,badge=!view?'<span class="px-3 py-1 rounded-full bg-stone-100 text-stone-500 text-xs font-bold">Not marked yet</span>':me.st==='P'?'<span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">✅ Present</span>':me.st==='A'?'<span class="px-3 py-1 rounded-full bg-rose-600 text-white text-xs font-bold">❌ Absent</span>':'<span class="px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-bold">🟡 POD</span>';
  return `<div class="bg-white rounded-2xl border border-indigo-200 shadow-sm p-4 flex items-start justify-between gap-2"><div class="min-w-0"><div class="text-[10px] font-bold uppercase tracking-wider text-indigo-600">My attendance • Group ${me.g}</div><div class="text-base font-bold capitalize truncate">${esc(me.name.toLowerCase())}</div><div class="text-xs text-stone-500">${esc(me.en)} • Roll #${me.sno}</div><div class="text-[11px] text-stone-500 mt-1">${esc(lecName())} • ${esc($('dt').value)}</div></div><div class="text-right shrink-0 space-y-1">${badge}<button onclick="stuSwitch()" class="block ml-auto text-[10px] font-semibold text-indigo-600 hover:underline">Switch roll no.</button></div></div>`;
 }
@@ -577,7 +592,8 @@ function renderHome(){
  const el=$('stuBox');if(!el)return;
  const me=S.find(s=>s.en===myEn);
  if(el.contains(document.activeElement)&&document.activeElement.id==='enIn')return;
- el.innerHTML=(admin?'':myCardHtml(me))+(isDef()?ttHtml(admin?null:me):'')+noticesHtml();
+ if(me&&!admin)loadMyStats();
+ el.innerHTML=(admin?'':myCardHtml(me)+myExtraHtml(me))+(!admin&&isDef()?ttHtml(me):'')+noticesHtml();
 }
 async function postNotice(){
  if(!admin||!CONFIGURED)return toast('Please log in as admin first');
@@ -592,7 +608,107 @@ async function vote(id,i){
  try{await updateDoc(nDoc(id),{['votes.'+myEn]:i});toast('🗳️ Vote saved')}catch(e){toast('Vote failed: '+(e.code||e.message))}
 }
 
-Object.assign(window,{stuLogin,stuSwitch,setDay,postNotice,delNotice,vote,toggleEveryone,setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,switchClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
+/* ================= Collections (payments) + Excel ================= */
+const colCol=()=>isDef()?collection(db,'collections'):collection(db,'classes',cls,'collections');
+const colDoc=id=>isDef()?doc(db,'collections',id):doc(db,'classes',cls,'collections',id);
+let COLS=[],curCol=null,unsubC=null,colQ='';
+function listenCols(){
+ if(unsubC){unsubC();unsubC=null}COLS=[];curCol=null;renderCol();
+ if(!CONFIGURED)return;
+ unsubC=onSnapshot(colCol(),sn=>{
+  const ids=COLS.map(c=>c.id).join(),prev=curCol;
+  COLS=sn.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.t-b.t);
+  if(!COLS.some(c=>c.id===curCol))curCol=COLS.length?COLS[COLS.length-1].id:null;
+  (ids===COLS.map(c=>c.id).join()&&prev===curCol)?renderColList():renderCol();renderHome();
+ },()=>{});
+}
+const inp='px-3 py-2 rounded-lg border border-stone-300 text-sm outline-none focus:border-indigo-600';
+function renderCol(){
+ const el=$('colBox');if(!el)return;
+ const chips=COLS.map(c=>`<button onclick="pickCol('${c.id}')" class="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border ${c.id===curCol?'bg-indigo-800 text-white border-indigo-800':'bg-white text-stone-600 border-stone-200'}">${esc(c.title)}${c.amount?' • ₹'+c.amount:''}</button>`).join('');
+ el.innerHTML=`<div class="text-sm font-bold text-indigo-900">💰 Collections • ${esc(className())}</div>
+ <div class="flex gap-2"><input id="cTitle" placeholder="New collection (e.g. Trip fee)" class="flex-1 min-w-0 ${inp}"><input id="cAmt" type="number" inputmode="numeric" placeholder="₹ each" class="w-24 ${inp}"><button onclick="addCol()" class="px-3 rounded-lg bg-indigo-800 text-white text-xs font-bold">+ Add</button></div>`
+ +(COLS.length?`<div class="flex gap-1.5 overflow-x-auto py-1">${chips}</div><div id="colMeta"></div><input value="${esc(colQ)}" oninput="colSearch(this.value)" placeholder="🔍 Search student" class="w-full ${inp}"><div id="colList" class="divide-y divide-stone-100 border border-stone-200 rounded-xl max-h-[60vh] overflow-auto"></div>`:'<p class="text-xs text-stone-400">No collections yet. Create one above (e.g. Trip fee, T-shirt, Fine).</p>');
+ renderColList();
+}
+function renderColList(){
+ const c=COLS.find(x=>x.id===curCol),L=$('colList'),M=$('colMeta');if(!c||!L||!M)return;
+ const paid=c.paid||{},n=S.filter(s=>paid[s.en]).length,q=colQ.trim().toLowerCase(),a=c.amount||0;
+ M.innerHTML=`<div class="flex items-center justify-between gap-2 text-xs"><span class="font-bold text-emerald-700">Paid ${n}/${S.length}${a?` • ₹${n*a} collected • ₹${(S.length-n)*a} pending`:''}</span><span class="flex gap-1.5 shrink-0"><button onclick="xlsCol()" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold">⬇ Excel</button><button onclick="delCol()" class="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 font-bold">🗑</button></span></div>`;
+ L.innerHTML=S.filter(s=>!q||s.name.toLowerCase().includes(q)||s.en.toLowerCase().includes(q)).map(s=>`<div class="flex items-center justify-between gap-2 px-3 py-2"><div class="min-w-0"><div class="text-[13px] font-semibold capitalize truncate">${s.sno}. ${esc(s.name.toLowerCase())}</div><div class="text-[10px] text-stone-400">${esc(s.en)}</div></div><button onclick="togglePaid('${esc(s.en)}')" class="shrink-0 px-3 py-1.5 rounded-full text-xs font-bold ${paid[s.en]?'bg-emerald-600 text-white':'bg-rose-50 text-rose-700 border border-rose-300'}">${paid[s.en]?'✔ Paid':'Unpaid'}</button></div>`).join('')||'<div class="p-4 text-center text-xs text-stone-400">No students found.</div>';
+}
+function pickCol(id){curCol=id;renderCol()}
+function colSearch(v){colQ=v;renderColList()}
+async function addCol(){
+ if(!admin||!CONFIGURED)return toast('Please log in as admin first');
+ const title=$('cTitle').value.trim(),amount=Number($('cAmt').value)||0;if(!title)return toast('Enter a title');
+ try{const r=doc(colCol());await setDoc(r,{title,amount,paid:{},t:Date.now()});curCol=r.id;toast('Collection created')}catch(e){toast('Failed: '+(e.code||e.message))}
+}
+async function togglePaid(en){
+ if(!admin)return;const c=COLS.find(x=>x.id===curCol);if(!c)return;
+ const v=!(c.paid||{})[en];c.paid={...(c.paid||{}),[en]:v};renderColList();
+ try{await updateDoc(colDoc(c.id),{['paid.'+en]:v})}catch(e){toast('Failed: '+(e.code||e.message))}
+}
+async function delCol(){
+ const c=COLS.find(x=>x.id===curCol);if(!admin||!c||!confirm('Delete "'+c.title+'" and all its payment records?'))return;
+ try{await deleteDoc(colDoc(c.id));toast('Deleted')}catch(e){toast('Failed: '+(e.code||e.message))}
+}
+function loadX(){return window.XLSX?Promise.resolve():new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=ok;s.onerror=()=>no(new Error('Could not load the Excel library (check internet)'));document.head.appendChild(s)})}
+async function xlsCol(){
+ const c=COLS.find(x=>x.id===curCol);if(!c)return;
+ try{
+  await loadX();const paid=c.paid||{},a=c.amount||0,n=S.filter(s=>paid[s.en]).length;
+  const rows=[['Sr','Name','Enrollment','Group','Status','Amount']].concat(S.map(s=>[s.sno,s.name,s.en,s.g,paid[s.en]?'Paid':'Unpaid',paid[s.en]?a:0]));
+  rows.push([],['','','','Paid',n,n*a],['','','','Unpaid',S.length-n,(S.length-n)*a]);
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:5},{wch:30},{wch:18},{wch:7},{wch:10},{wch:10}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Collection');
+  XLSX.writeFile(wb,(className()+'_'+c.title).replace(/[^a-zA-Z0-9_-]+/g,'_')+'.xlsx');toast('Excel downloaded');
+ }catch(e){toast(e.message)}
+}
+
+/* ================= Student: overall attendance + my payments + alerts ================= */
+let MYST=null,stKey='';
+const attC=()=>isDef()?collection(db,'attendance'):collection(db,'classes',cls,'attendance');
+const tgC=()=>isDef()?collection(db,'tg'):collection(db,'classes',cls,'tg');
+async function loadMyStats(force){
+ if(!CONFIGURED||!myEn)return;const k=cls+myEn;if(!force&&stKey===k)return;stKey=k;MYST='loading';renderHome();
+ try{
+  const [a,t]=await Promise.all([getDocs(attC()),getDocs(tgC())]),tg={},by={},rec=[];
+  const add=(l,st)=>{const b=by[l]=by[l]||{p:0,a:0,d:0};st==='P'?b.p++:st==='A'?b.a++:b.d++};
+  t.forEach(d=>{const x=d.data();tg[x.date||d.id]=x.rec||{}});
+  a.forEach(d=>{const x=d.data();if(!x.date)return;const l=x.lec||d.id.slice(11);
+   const st=x.v===2?((x.ov&&x.ov[myEn]!==undefined)?x.ov[myEn]:((tg[x.date]||{})[myEn]||'P')):((x.rec||{})[myEn]||'P');
+   add(l,st);rec.push({d:x.date,n:l,st})});
+  Object.keys(tg).forEach(dt=>{const st=tg[dt][myEn]||'P';add('__tg',st);rec.push({d:dt,n:'__tg',st})});
+  MYST={by,rec:rec.sort((x,y)=>y.d.localeCompare(x.d)).slice(0,10)};
+ }catch(e){MYST={err:e.code||e.message}}
+ renderHome();
+}
+const LN=id=>id==='__tg'?'TG (whole day)':(LECS.find(l=>l.id===id)||{name:id}).name;
+const bx=h=>`<div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3.5">${h}</div>`;
+const SB={P:'bg-emerald-100 text-emerald-700',A:'bg-rose-600 text-white',POD:'bg-amber-500 text-white'};
+function statsHtml(){
+ if(!MYST||MYST==='loading')return bx('<p class="text-xs text-stone-500">Loading your attendance…</p>');
+ if(MYST.err)return bx('<p class="text-xs text-rose-600">Could not load attendance: '+esc(MYST.err)+'</p>');
+ const rows=Object.entries(MYST.by),lec=rows.filter(([k])=>k!=='__tg'),src=lec.length?lec:rows;
+ const T=b=>b.p+b.a+b.d,pc=b=>T(b)?Math.round((b.p+b.d)*100/T(b)):0;
+ const tot=src.reduce((s,[,b])=>s+T(b),0),pr=src.reduce((s,[,b])=>s+b.p+b.d,0),ov=tot?Math.round(pr*100/tot):0;
+ const row=([k,b])=>`<div><div class="flex justify-between text-[12px]"><span class="font-semibold truncate pr-2">${esc(LN(k))}</span><span class="shrink-0 text-stone-500">${b.p}P ${b.a}A ${b.d}POD • <b class="${pc(b)>=75?'text-emerald-700':'text-rose-600'}">${pc(b)}%</b></span></div><div class="h-1.5 rounded bg-stone-100 mt-0.5"><div class="h-1.5 rounded ${pc(b)>=75?'bg-emerald-500':'bg-rose-500'}" style="width:${pc(b)}%"></div></div></div>`;
+ return bx(`<div class="flex items-center justify-between"><div class="text-sm font-bold text-indigo-900">📊 My overall attendance</div><button onclick="loadMyStats(true)" class="text-[10px] font-semibold text-indigo-600">↻ Refresh</button></div>
+ <div class="flex items-end gap-2 my-1"><span class="text-3xl font-bold ${ov>=75?'text-emerald-600':'text-rose-600'}">${tot?ov+'%':'–'}</span><span class="text-[11px] text-stone-500 pb-1">${pr} of ${tot} lectures • POD counted as present</span></div>
+ <div class="space-y-2 mt-2">${rows.map(row).join('')||'<p class="text-xs text-stone-400">No attendance has been marked yet.</p>'}</div>
+ ${MYST.rec.length?`<div class="mt-3 text-[11px] font-bold text-stone-500 uppercase">Recent</div><div class="divide-y divide-stone-100">${MYST.rec.map(r=>`<div class="flex justify-between items-center py-1.5 text-[12px]"><span class="truncate pr-2">${esc(r.d)} • ${esc(LN(r.n))}</span><span class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${SB[r.st]}">${r.st}</span></div>`).join('')}</div>`:''}`);
+}
+function myExtraHtml(me){
+ if(!me)return '';
+ const pay=COLS.length?bx(`<div class="text-sm font-bold text-indigo-900 mb-1">💰 My payments</div>`+COLS.map(c=>{const ok=(c.paid||{})[me.en];return `<div class="flex justify-between items-center py-1.5 text-[13px] border-t border-stone-100"><span class="truncate pr-2">${esc(c.title)}${c.amount?' • ₹'+c.amount:''}</span><span class="shrink-0 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${ok?'bg-emerald-100 text-emerald-700':'bg-rose-50 text-rose-700 border border-rose-300'}">${ok?'✔ Paid':'Unpaid'}</span></div>`}).join('')):'';
+ return statsHtml()+pay;
+}
+const alertBtn=()=>('Notification' in window&&Notification.permission==='default'&&!admin)?`<button onclick="enableAlerts()" class="${hb}">🔔 Alerts</button>`:'';
+async function enableAlerts(){try{const p=await Notification.requestPermission();toast(p==='granted'?'Alerts on: you get a pop-up for new notices while this page is open':'Alerts blocked in browser settings');chrome()}catch(e){}}
+setInterval(()=>loadMyStats(true),300000);
+Object.assign(window,{setTab,pickCol,colSearch,addCol,togglePaid,delCol,xlsCol,loadMyStats,enableAlerts,stuLogin,stuSwitch,setDay,postNotice,delNotice,vote,toggleEveryone,setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,switchClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
+if(myEn&&!S.some(s=>s.en===myEn)&&!hashCls()){const c=CLASSES.find(c=>seedFor(c.id).some(s=>s.en===myEn));if(c)switchClass(c.id)}
 fillClassSel();tabs();filters();chrome();loadRec();initFirebase();
 setInterval(renderHome,60000);
 </script>
