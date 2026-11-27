@@ -80,6 +80,11 @@ details.rc summary{cursor:pointer;font-size:12px;font-weight:700;color:#4f46e5;l
 .ok1,.no1{flex:none;padding:3px 11px;border-radius:99px;font-size:11px;font-weight:700}.ok1{background:#d1fae5;color:#047857}.no1{background:#fff1f2;color:#e11d48;border:1px solid #fecdd3}
 .lg{padding:20px}.lg h2{margin:0;font-size:16px;font-weight:700;color:#1e1b4b}
 body #everyoneBtn{border:1px solid #e0e4f4;border-width:1px;border-radius:18px;font-weight:700;color:#4338ca;background:#fff;box-shadow:0 12px 26px -18px rgba(79,70,229,.6)}
+
+.rq{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;border:1.5px solid #6366f1;background:#fff;color:#4338ca;white-space:nowrap}
+button.rq{cursor:pointer}button.rq:active{transform:scale(.97)}
+.rq.ok{border-color:#a7f3d0;background:#d1fae5;color:#047857}.rq.no{border-color:#e5e7eb;background:#f3f4f6;color:#6b7280}.rq.wait{border-color:#fde68a;background:#fffbeb;color:#b45309}
+.rqc{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px;border-radius:16px;border:1px solid #e6e9f8;background:#f8f9ff}
 </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased">
@@ -96,7 +101,7 @@ body #everyoneBtn{border:1px solid #e0e4f4;border-width:1px;border-radius:18px;f
 
 <main class="flex-1 min-w-0 max-w-4xl w-full mx-auto px-2.5 py-3 space-y-3">
 <nav id="admTabs" class="hidden p-1 rounded-xl bg-white border border-indigo-100 shadow-sm gap-1">
-<button data-t="att" onclick="setTab('att')">📋 Attendance</button><button data-t="col" onclick="setTab('col')">💰 Collections</button><button data-t="not" onclick="setTab('not')">📢 Notices</button>
+<button data-t="att" onclick="setTab('att')">📋 Attendance</button><button data-t="col" onclick="setTab('col')">💰 Collections</button><button data-t="not" onclick="setTab('not')">📢 Notices</button><button data-t="inb" onclick="setTab('inb')">📨 Inbox<span id="inbCnt" style="display:none;margin-left:5px;min-width:17px;padding:1px 5px;border-radius:99px;background:#f59e0b;color:#fff;font-size:10px"></span></button>
 </nav>
 <section id="crBox" class="hidden bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2">
 <div class="text-sm font-bold text-indigo-900">📢 Post a notice</div>
@@ -108,6 +113,7 @@ body #everyoneBtn{border:1px solid #e0e4f4;border-width:1px;border-radius:18px;f
 <button onclick="postNotice()" class="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-800 text-white">Post</button>
 </section>
 <section id="colBox" class="hidden bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2"></section>
+<section id="inbBox" class="hidden bg-white rounded-2xl border border-indigo-100 shadow-sm p-3 space-y-2"></section>
 <div id="stuBox" class="space-y-3"></div>
 
 <div id="everyoneWrap" class="space-y-3">
@@ -244,7 +250,7 @@ const firebaseConfig = {
 
 const HAS_CFG=!String(firebaseConfig.apiKey).startsWith('PASTE');
 let CONFIGURED=false;
-let db=null,auth=null,initializeApp,getFirestore,doc,getDoc,setDoc,onSnapshot,collection,updateDoc,deleteDoc,getDocs,getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged;
+let fbApp=null,db=null,auth=null,initializeApp,getFirestore,doc,getDoc,setDoc,onSnapshot,collection,updateDoc,deleteDoc,getDocs,getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged;
 const V='https://www.gstatic.com/firebasejs/10.12.2/';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -303,8 +309,9 @@ async function initFirebase(){
  try{
   const [a,f,u]=await Promise.all([import(V+'firebase-app.js'),import(V+'firebase-firestore.js'),import(V+'firebase-auth.js')]);
   ({initializeApp}=a);({getFirestore,doc,getDoc,setDoc,onSnapshot,collection,updateDoc,deleteDoc,getDocs}=f);({getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=u);
-  const app=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app);CONFIGURED=true;
+  const app=fbApp=initializeApp(firebaseConfig);db=getFirestore(app);auth=getAuth(app);CONFIGURED=true;
   listenRegistry();listenStudents();
+  if('Notification' in window&&Notification.permission==='granted')setupPush().catch(()=>{});
   onAuthStateChanged(auth,u=>{
    const c=loginCls||savedCls();
    myCls=u&&Object.values(CODES).includes(c)?c:null;
@@ -374,7 +381,7 @@ function listenRegistry(){
  },()=>{});
 }
 let unsubStu=null;
-function listenStudents(){listenNotices();listenCols();
+function listenStudents(){listenNotices();listenCols();listenReqs();
  if(unsubStu){unsubStu();unsubStu=null}
  if(!CONFIGURED)return;
  unsubStu=onSnapshot(stuRef(),d=>{
@@ -600,8 +607,8 @@ function setTab(t){admTab=t;applyView();window.scrollTo({top:0})}
 function applyView(){
  const A=admin,t=admTab,sh=(id,on)=>$(id).classList.toggle('hidden',!on);
  sh('admTabs',A);$('admTabs').classList.toggle('flex',A);
- document.querySelectorAll('#admTabs button').forEach(b=>b.className='flex-1 py-2 rounded-lg text-xs font-bold '+(b.dataset.t===t?'bg-indigo-800 text-white shadow':'text-stone-600'));
- sh('crBox',A&&t==='not');sh('colBox',A&&t==='col');sh('stuBox',!A||t==='not');
+ document.querySelectorAll('#admTabs button').forEach(b=>b.className='flex-1 py-2 px-1 rounded-lg text-[11px] font-bold '+(b.dataset.t===t?'bg-indigo-800 text-white shadow':'text-stone-600'));
+ sh('crBox',A&&t==='not');sh('inbBox',A&&t==='inb');sh('colBox',A&&t==='col');sh('stuBox',!A||t==='not');
  sh('selBox',!A||t==='att');sh('everyoneWrap',A?t==='att':everyoneOpen);sh('everyoneBtnWrap',!A);
  sh('admTools',A);$('admTools').classList.toggle('flex',A);
  $('everyoneBtn').textContent=everyoneOpen?"🙈 Hide everyone's attendance":"👥 See everyone's attendance";
@@ -659,13 +666,14 @@ function heroHtml(me){
  if(M){rows=Object.entries(M.by);const lec=rows.filter(([k])=>k!=='__tg');(lec.length?lec:rows).forEach(([,b])=>{tot+=T(b);pr+=b.p+b.d;P+=b.p;A+=b.a;D+=b.d})}
  const ov=tot?Math.round(pr*100/tot):0;
  const st=!taken?'<span class="bd0">Not marked yet</span>':me.st==='P'?'<span class="bd1">✅ Present</span>':me.st==='A'?'<span class="bd2">❌ Absent</span>':'<span class="bd3">🟡 POD</span>';
+ const abs=(taken&&me.st==='A')?`<div class="td" style="margin-top:8px"><span>You are marked absent here</span>${reqBtn(me,$('dt').value,$('lec').value)}</div>`:'';
  const row=([k,b])=>`<div class="sr"><div class="srh"><span>${esc(LN(k))}</span><span><b class="${pc(b)>=75?'g':'r'}">${pc(b)}%</b> <i>${b.p}P ${b.a}A ${b.d}POD</i></span></div><div class="bar"><div class="${pc(b)>=75?'bg-g':'bg-r'}" style="width:${pc(b)}%"></div></div></div>`;
  const body=!MYST||MYST==='loading'?'<p class="mut">Loading your attendance…</p>':MYST.err?'<p class="mut" style="color:#e11d48">Could not load attendance: '+esc(MYST.err)+'</p>'
   :(rows.map(row).join('')||'<p class="mut">No attendance has been marked yet.</p>')
-   +(M.rec.length?`<details class="rc"><summary>Recent records ›</summary>${M.rec.map(r=>`<div class="rr"><span>${esc(r.d)} • ${esc(LN(r.n))}</span><span class="${r.st==='P'?'bd1':r.st==='A'?'bd2':'bd3'}">${r.st}</span></div>`).join('')}</details>`:'');
+   +(M.rec.length?`<details class="rc"><summary>Recent records ›</summary>${M.rec.map(r=>`<div class="rr"><span>${esc(r.d)} • ${esc(LN(r.n))}</span><span style="display:flex;gap:6px;align-items:center;flex:none"><span class="${r.st==='P'?'bd1':r.st==='A'?'bd2':'bd3'}">${r.st}</span>${r.st==='A'?reqBtn(me,r.d,r.n):''}</span></div>`).join('')}</details>`:'');
  return `<div class="cd"><div class="hero"><div class="flex items-center justify-between gap-3"><div class="min-w-0"><div class="lb">MY ATTENDANCE</div><div class="nm">${esc(me.name.toLowerCase())}</div><div class="sub">${esc(me.en)} • Roll ${me.sno} • Group ${me.g}</div><button onclick="stuSwitch()" class="sw">Switch roll no.</button></div>${ring(ov,ov>=75?'#6ee7b7':'#fda4af')}</div>
  <div class="hs"><div><b>${P}</b>Present</div><div><b>${A}</b>Absent</div><div><b>${D}</b>POD</div></div>
- <div class="td"><span>${esc(lecName())} • ${esc($('dt').value)}</span>${st}</div></div>
+ <div class="td"><span>${esc(lecName())} • ${esc($('dt').value)}</span>${st}</div>${abs}</div>
  <div class="bp"><div class="mut" style="margin-bottom:10px;display:flex;justify-content:space-between"><b style="color:#1e1b4b">Subject-wise</b><span>${tot?pr+' of '+tot+' lectures • POD = present':''}</span></div>${body}<button onclick="loadMyStats(true)" class="mut" style="margin-top:6px;background:none;border:0;padding:0;cursor:pointer">↻ Refresh</button></div></div>`;
 }
 function payHtml(me){
@@ -684,7 +692,7 @@ async function postNotice(){
  const title=$('nTitle').value.trim(),type=$('nType').value;if(!title)return toast('Enter a title');
  const n={type,title,body:$('nBody').value.trim(),link:/^https?:\/\//.test($('nLink').value.trim())?$('nLink').value.trim():'',t:Date.now()};
  if(type==='vote'){n.opts=[...new Set($('nOpts').value.split('\n').map(x=>x.trim()).filter(Boolean))];if(n.opts.length<2)return toast('Add at least 2 poll options');n.votes={}}
- try{await setDoc(nDoc(String(n.t)),n);['nTitle','nBody','nLink','nOpts'].forEach(i=>$(i).value='');toast('📢 Posted')}catch(e){toast('Post failed: '+(e.code||e.message))}
+ try{await setDoc(nDoc(String(n.t)),n);['nTitle','nBody','nLink','nOpts'].forEach(i=>$(i).value='');toast('Posted');pushSend(n)}catch(e){toast('Post failed: '+(e.code||e.message))}
 }
 async function delNotice(id){if(!admin||!confirm('Delete this notice?'))return;try{await deleteDoc(nDoc(id));toast('Deleted')}catch(e){toast('Delete failed: '+(e.code||e.message))}}
 async function vote(id,i){
@@ -778,11 +786,124 @@ const LN=id=>id==='__tg'?'TG (whole day)':(LECS.find(l=>l.id===id)||{name:id}).n
 const bx=h=>`<div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-3.5">${h}</div>`;
 const SB={P:'bg-emerald-100 text-emerald-700',A:'bg-rose-600 text-white',POD:'bg-amber-500 text-white'};
 const alertBtn=()=>('Notification' in window&&Notification.permission==='default'&&!admin)?`<button onclick="enableAlerts()" class="${hb}">🔔 Alerts</button>`:'';
-async function enableAlerts(){try{const p=await Notification.requestPermission();toast(p==='granted'?'Alerts on: you get a pop-up for new notices while this page is open':'Alerts blocked in browser settings');chrome()}catch(e){}}
+/* ---- Push notifications that arrive even when the site is closed (Firebase Cloud Messaging) ---- */
+const PUSH_WORKER='https://kaksh-push.artificialintelligence88808.workers.dev'; // Cloudflare Worker link (see worker.js)
+const WORKER_ON=!PUSH_WORKER.startsWith('PASTE');
+const VAPID_KEY='BInVJv4mFO8iRgBNUqKbh1rZus1Ig4VpruTtsVG6KC_uqLJ4j-ulq3tTGbU3XmcJN3pz5-0sYsA_qXoyirKEvis'; // Firebase > Project settings > Cloud Messaging > Web Push certificates > Key pair
+async function setupPush(){
+ if(!('serviceWorker' in navigator)||!('Notification' in window))return 'unsupported';
+ if(VAPID_KEY.startsWith('PASTE'))return 'nokey';
+ if(Notification.permission!=='granted')return Notification.permission;
+ const M=await import(V+'firebase-messaging.js');
+ if(!(await M.isSupported()))return 'unsupported';
+ const reg=await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+ await navigator.serviceWorker.ready;
+ const msg=M.getMessaging(fbApp);
+ const tok=await M.getToken(msg,{vapidKey:VAPID_KEY,serviceWorkerRegistration:reg});
+ M.onMessage(msg,pl=>{const n=pl.notification||{};toast((n.title||'New notice')+(n.body?': '+n.body:''))});
+ if(!tok)return 'notoken';
+ if(WORKER_ON){
+  if(!myEn)return 'noen';
+  const topic=(CLASSES.find(c=>seedFor(c.id).some(s=>s.en===myEn))||{id:cls}).id,key=topic+':'+tok.slice(-12);
+  if(ls.g('kaksha-push-sub')!==key){
+   const r=await fetch(PUSH_WORKER+'/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok,topic})});
+   const j=await r.json();if(!j.ok)return 'nosub';ls.s('kaksha-push-sub',key);
+  }
+ }
+ return 'ok';
+}
+async function pushSend(n){
+ if(!WORKER_ON)return;
+ let pass=ls.g('kaksha-push-pass');
+ if(!pass){pass=prompt('Push password (the ADMIN_PASS you set in Cloudflare):');if(!pass)return toast('Posted. Push not sent (no password).');ls.s('kaksha-push-pass',pass)}
+ try{
+  const r=await fetch(PUSH_WORKER+'/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pass,topic:cls,title:n.title,body:n.body||({pdf:'New PDF / notes',vote:'New class poll'}[n.type]||'New announcement'),link:location.origin+location.pathname+'#'+encodeURIComponent(cls)})});
+  if(r.status===401){ls.d('kaksha-push-pass');return toast('Wrong push password. Post again to retry.')}
+  const j=await r.json();toast(j.ok?'Push sent to all subscribed students':'Push failed: '+(j.detail||j.error||r.status));
+ }catch(e){toast('Push failed: '+(e.message||e))}
+}
+async function enableAlerts(){
+ try{
+  let p=Notification.permission;if(p==='default')p=await Notification.requestPermission();
+  if(p!=='granted'){toast('Notifications are blocked in your browser settings');chrome();return}
+  const r=await setupPush();
+  toast(r==='ok'?'Alerts are on. You will get notifications even when the site is closed.':r==='nokey'?'Alerts are on while this page is open.':r==='noen'?'Enter your enrollment number first, then tap Alerts again':r==='nosub'?'Could not register with the push server. Check the Worker link.':r==='unsupported'?'This browser cannot do background push. On iPhone, add the site to the Home Screen first.':'Could not finish setting up alerts');
+ }catch(e){toast('Could not turn on alerts: '+(e.message||e))}
+ chrome();
+}
+/* ================= "I am present" requests (student -> admin inbox) =================
+   One request per student per subject per date. A request stays open for 1 hour, then it expires. */
+const REQ_MS=3600000;
+const reqCol=()=>isDef()?collection(db,'requests'):collection(db,'classes',cls,'requests');
+const reqDoc=id=>isDef()?doc(db,'requests',id):doc(db,'classes',cls,'requests',id);
+const reqId=(d,l,e)=>d+'_'+(l===TG?'tg':l)+'_'+e;
+const reqLeft=r=>Math.max(0,Math.ceil((r.t+REQ_MS-Date.now())/60000));
+const reqLive=r=>r.st==='pending'&&Date.now()-r.t<REQ_MS;
+let REQS=[],unsubR=null,seenR=false,apprN=0;
+function listenReqs(){
+ if(unsubR){unsubR();unsubR=null}REQS=[];seenR=false;renderInbox();
+ if(!CONFIGURED)return;
+ unsubR=onSnapshot(reqCol(),sn=>{
+  if(seenR&&admin)sn.docChanges().forEach(c=>{if(c.type==='added'&&c.doc.data().st==='pending')toast('New request from '+c.doc.data().name)});
+  seenR=true;REQS=sn.docs.map(d=>({id:d.id,...d.data()}));
+  if(!admin&&myEn){const k=REQS.filter(r=>r.en===myEn&&r.st==='approved').length;if(k!==apprN){apprN=k;loadMyStats(true)}}
+  renderInbox();renderHome();
+ },()=>{});
+}
+function reqBtn(me,date,lec){
+ const r=REQS.find(x=>x.id===reqId(date,lec,me.en));
+ if(!r)return `<button onclick="reqPresent('${date}','${lec}')" class="rq">🙋 I am present</button>`;
+ if(r.st==='approved')return '<span class="rq ok">✔ Approved</span>';
+ if(r.st==='rejected')return '<span class="rq no">Request rejected</span>';
+ return reqLive(r)?`<span class="rq wait">Sent • ${reqLeft(r)} min left</span>`:'<span class="rq no">Request expired</span>';
+}
+async function reqPresent(date,lec){
+ const me=S.find(s=>s.en===myEn);if(!me||admin)return;
+ if(!CONFIGURED)return toast('Not connected to the database');
+ const id=reqId(date,lec,me.en);if(REQS.some(r=>r.id===id))return toast('You already sent a request for this subject');
+ const r={en:me.en,name:me.name,date,lec,t:Date.now(),st:'pending'};
+ REQS.push({id,...r});renderHome();
+ try{await setDoc(reqDoc(id),r);toast('Request sent. The admin has 1 hour to approve it.')}
+ catch(e){REQS=REQS.filter(x=>x.id!==id);renderHome();toast(e.code==='permission-denied'?'Requests are blocked by the database rules. The admin must publish the updated rules once.':'Could not send: '+(e.code||e.message))}
+}
+function renderInbox(){
+ const live=REQS.filter(reqLive).sort((a,b)=>a.t-b.t),old=REQS.filter(r=>!reqLive(r)).sort((a,b)=>b.t-a.t).slice(0,10);
+ const b=$('inbCnt');if(b){b.textContent=live.length||'';b.style.display=live.length?'inline-block':'none'}
+ const el=$('inbBox');if(!el||!admin)return;
+ const meta=r=>`${esc(r.en)} • ${esc(LN(r.lec))} • ${esc(r.date)}`;
+ const card=r=>`<div class="rqc"><div class="min-w-0"><div class="text-[13px] font-bold capitalize truncate">${esc(String(r.name).toLowerCase())}</div><div class="text-[11px] text-stone-500">${meta(r)}</div><div class="text-[10px] font-semibold text-amber-600">${reqLeft(r)} min left</div></div><div class="flex gap-1.5 shrink-0"><button onclick="decideReq('${esc(r.id)}',true)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white">✔ Approve</button><button onclick="decideReq('${esc(r.id)}',false)" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">✕</button></div></div>`;
+ const oldRow=r=>`<div class="flex items-center justify-between gap-2 py-2 border-t border-stone-100 text-[12px]"><span class="min-w-0 truncate"><b class="capitalize">${esc(String(r.name).toLowerCase())}</b> • ${esc(LN(r.lec))} • ${esc(r.date)}</span><span class="rq ${r.st==='approved'?'ok':r.st==='rejected'?'no':'no'}">${r.st==='approved'?'Approved':r.st==='rejected'?'Rejected':'Expired'}</span></div>`;
+ el.innerHTML=`<div class="text-sm font-bold text-indigo-900">📨 Present requests • ${esc(className())}</div><p class="text-[11px] text-stone-500">Students marked absent can ask to be marked present. One request per subject, and each request stays open for 1 hour.</p>`
+  +(live.length?live.map(card).join(''):'<div class="p-5 text-center text-xs text-stone-400">No pending requests.</div>')
+  +(old.length?'<div class="text-[11px] font-bold text-stone-500 uppercase pt-2">Earlier</div>'+old.map(oldRow).join(''):'');
+}
+async function decideReq(id,ok){
+ const r=REQS.find(x=>x.id===id);
+ if(!admin||!CONFIGURED||!r||!reqLive(r)){toast('This request is no longer open');return renderInbox()}
+ try{
+  if(ok){
+   const en=r.en;
+   if(r.lec===TG){const ref=tgRef(r.date),s=await getDoc(ref);if(s.exists()){const rec={...(s.data().rec||{})};delete rec[en];await updateDoc(ref,{rec,updatedAt:Date.now()})}}
+   else{
+    const ref=attRef(r.date+'_'+r.lec),s=await getDoc(ref);
+    if(!s.exists())await setDoc(ref,{v:2,date:r.date,lec:r.lec,cls,ov:{[en]:'P'},updatedAt:Date.now()});
+    else{const x=s.data();
+     if(x.v===2)await updateDoc(ref,{ov:{...(x.ov||{}),[en]:'P'},updatedAt:Date.now()});
+     else{const rec={...(x.rec||{})};delete rec[en];await updateDoc(ref,{rec,updatedAt:Date.now()})}}
+   }
+  }
+  await updateDoc(reqDoc(id),{st:ok?'approved':'rejected'});
+  toast(ok?'Approved: '+r.name+' is now Present':'Request rejected');
+  if(ok&&!dirty&&$('dt').value===r.date)loadRec();
+ }catch(e){toast('Failed: '+(e.code||e.message))}
+}
+setInterval(()=>{renderInbox();renderHome()},30000);
 setInterval(()=>loadMyStats(true),300000);
 
 /* ================= SVG icons (Lucide style) – emoji are swapped for icons automatically ================= */
 const IC={
+inbox:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+hand:'<path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
 'graduation-cap':'<path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>',
 alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
 clipboard:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/>',
@@ -817,7 +938,7 @@ refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="
 bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
 save:'<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>'};
 const ic=(n,c='')=>`<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
-const EMO={'🎓':'graduation-cap','⚠':'alert','📋':'clipboard','💰':'wallet','📢':'megaphone','📌':'pin','📄':'file','🗳':'vote','🔍':'search','✕':'x','🗑':'trash','📚':'book','✅':'ok','❌':'no','🟡':'clock','⭐':'star','👥':'users','🖼':'image','✎':'pencil','📝':'list','💬':'msg','✏':'pencil','⚙':'shield','↺':'undo','🙈':'eyeoff','🍽':'utensils','🗓':'calendar','✓':'check','✔':'check','📥':'download','↗':'arrow','⬇':'download','📊':'chart','↻':'refresh','🔔':'bell','💾':'save'};
+const EMO={'📨':'inbox','🙋':'hand','🎓':'graduation-cap','⚠':'alert','📋':'clipboard','💰':'wallet','📢':'megaphone','📌':'pin','📄':'file','🗳':'vote','🔍':'search','✕':'x','🗑':'trash','📚':'book','✅':'ok','❌':'no','🟡':'clock','⭐':'star','👥':'users','🖼':'image','✎':'pencil','📝':'list','💬':'msg','✏':'pencil','⚙':'shield','↺':'undo','🙈':'eyeoff','🍽':'utensils','🗓':'calendar','✓':'check','✔':'check','📥':'download','↗':'arrow','⬇':'download','📊':'chart','↻':'refresh','🔔':'bell','💾':'save'};
 const EMRE=new RegExp('('+Object.keys(EMO).join('|')+')\ufe0f?','g'),EMT=new RegExp('('+Object.keys(EMO).join('|')+')');
 function iconify(root){
  if(!root||!root.nodeType)return;const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),hit=[];
@@ -826,7 +947,7 @@ function iconify(root){
   while((m=EMRE.exec(s))){f.append(s.slice(last,m.index));const b=document.createElement('span');b.innerHTML=ic(EMO[m[1]]);f.append(b.firstChild);last=m.index+m[0].length}
   f.append(s.slice(last));t.replaceWith(f)})}
 
-Object.assign(window,{setTab,pickCol,colSearch,addCol,togglePaid,delCol,xlsCol,loadMyStats,enableAlerts,stuLogin,stuSwitch,setDay,postNotice,delNotice,vote,toggleEveryone,setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,switchClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
+Object.assign(window,{reqPresent,decideReq,setTab,pickCol,colSearch,addCol,togglePaid,delCol,xlsCol,loadMyStats,enableAlerts,stuLogin,stuSwitch,setDay,postNotice,delNotice,vote,toggleEveryone,setMode,setFlt,setSt,markAll,saveAtt,openPin,closePin,doLogin,doLogout,openModal,closeModal,dlImg,shareImg,copyText,openNames,closeNames,pickNames,copyNames,openAdmin,closeAdmin,editStu,newStu,cancelForm,saveStu,delStu,switchClass,openSub,closeSub,saveSubs,subAdd,subDel,subInput,resetTG});
 if(myEn&&!S.some(s=>s.en===myEn)&&!hashCls()){const c=CLASSES.find(c=>seedFor(c.id).some(s=>s.en===myEn));if(c)switchClass(c.id)}
 fillClassSel();tabs();filters();chrome();loadRec();initFirebase();
 iconify(document.body);
